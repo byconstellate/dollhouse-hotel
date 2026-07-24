@@ -112,20 +112,5 @@
 
   {"id":"AD001","name":"Pink clipboard","category":"Administration","required":true},
   {"id":"AD002","name":"Pink iPad","category":"Administration","required":true},
-  {"id":"AD004","name":"Pen","category":"Administration","required":true},
-  {"id":"AD007","name":"Lost property bag","category":"Administration","required":false},
-  {"id":"AD008","name":"Maintenance request forms","category":"Administration","required":false},
-
-  {"id":"DH001","name":"Pink spray bottles with DH logo","category":"Dollhouse Hotel Extras","required":false},
-  {"id":"DH002","name":"Black mop bucket with hot pink wheels","category":"Dollhouse Hotel Extras","required":false},
-  {"id":"DH003","name":"Pink feather duster","category":"Dollhouse Hotel Extras","required":false},
-  {"id":"DH004","name":"Pink microfiber cloths","category":"Dollhouse Hotel Extras","required":false},
-  {"id":"DH005","name":"Pink housekeeping gloves","category":"Dollhouse Hotel Extras","required":false},
-  {"id":"DH006","name":"Heart-shaped room keys","category":"Dollhouse Hotel Extras","required":false},
-  {"id":"DH007","name":"Tiny plush teddy for VIP rooms","category":"Dollhouse Hotel Extras","required":false},
-  {"id":"DH008","name":"Pink ribbon for gift wrapping","category":"Dollhouse Hotel Extras","required":false},
-  {"id":"DH009","name":"Dollhouse Hotel chocolates for pillow service","category":"Dollhouse Hotel Extras","required":false},
-  {"id":"DH010","name":"Branded slippers","category":"Dollhouse Hotel Extras","required":false},
-  {"id":"DH011","name":"Branded bathrobe","category":"Dollhouse Hotel Extras","required":false},
-  {"id":"DH012","name":"Mini sewing kit in a pink pouch","category":"Dollhouse Hotel Extras","required":false}
+  {"id":"AD004","name":"Pen","category":"Administration","required":true}
 ]

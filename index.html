@@ -104,10 +104,10 @@ line-height:1.5;
 #flash{
 position:absolute;
 inset:0;
-background:white;
+background:black;
 opacity:0;
 z-index:100;
-transition:opacity 1s;
+transition:opacity 1.4s ease;
 pointer-events:none;
 }
 
@@ -245,7 +245,7 @@ transform:translateX(-50%);
 width:min(88%,740px);
 height:82%;
 }
-#orderPanel,#orderConfirmPanel,#taskCardPanel{
+#orderPanel,#orderConfirmPanel,#taskCardPanel,#buyCheckPanel{
 top:50%;
 left:50%;
 transform:translate(-50%,-50%);
@@ -297,12 +297,14 @@ transition:background 0.15s;
 .item-row input[type="checkbox"]{ accent-color:#ff00ff; width:15px; height:15px; flex-shrink:0; cursor:pointer; }
 .item-row.is-missing{ color:#ff6688; text-decoration:line-through; }
 .req-tag{ margin-left:auto; font-size:9px; color:#ff4466; letter-spacing:1px; flex-shrink:0; }
+.still-missing-tag{ margin-left:auto; font-size:9px; color:#ffaa00; letter-spacing:1px; flex-shrink:0; animation:pulse-warn 1.4s ease-in-out infinite; }
+@keyframes pulse-warn{ 0%,100%{ opacity:1; } 50%{ opacity:0.45; } }
 
 .panel-footer{
 padding-top:14px;
 text-align:center;
 display:flex;
-gap:12px;
+gap:10px;
 justify-content:center;
 flex-wrap:wrap;
 }
@@ -335,6 +337,12 @@ letter-spacing:1px;
 .btn-accept:hover{ background:rgba(136,255,204,0.1); }
 .btn-refuse{ border-color:#ff6688; color:#ff6688; }
 .btn-refuse:hover{ background:rgba(255,102,136,0.1); }
+.btn-later{ border-color:#ffcc44; color:#ffcc44; font-size:13px; padding:10px 20px; }
+.btn-later:hover{ background:rgba(255,204,68,0.1); }
+.btn-skip{ border-color:#ff6688; color:#ff6688; font-size:13px; padding:10px 20px; }
+.btn-skip:hover{ background:rgba(255,102,136,0.1); }
+.btn-nomats{ border-color:#ffaa00; color:#ffaa00; font-size:11px; padding:8px 16px; }
+.btn-nomats:hover{ background:rgba(255,170,0,0.1); }
 
 .confirm-list{
 margin:10px 0;
@@ -371,6 +379,9 @@ transition:background 0.15s;
 .task-item-row input[type="checkbox"]{ accent-color:#00ff88; width:15px; height:15px; flex-shrink:0; cursor:pointer; }
 .task-item-row.is-done{ color:#00cc66; text-decoration:line-through; }
 .task-room-tag{ margin-left:auto; font-size:9px; color:#ff88ff; letter-spacing:1px; flex-shrink:0; }
+
+/* Buy-check panel */
+.buy-item-name{ font-size:20px; font-weight:bold; text-align:center; color:#ffaaff; margin:10px 0 18px; }
 
 /* All done */
 #allDonePanel{
@@ -420,7 +431,7 @@ margin-bottom:14px;
 </div>
 
 <!-- Mood shift banner -->
-<div id="moodBanner" id="moodBanner"></div>
+<div id="moodBanner"></div>
 
 
 <!-- ─── EXTERIOR ──────────────────────────────── -->
@@ -444,9 +455,7 @@ margin-bottom:14px;
 
   <div class="character-container avatar-position">
     <img src="avatar.png" id="avatarIdle" class="character">
-    <video id="avatarTalking" class="character talking" muted playsinline preload="auto">
-      <source src="avatar-talking.mp4">
-    </video>
+    <img src="avatar-talking.gif" id="avatarTalking" class="character talking">
   </div>
 
   <div class="character-container boss-position">
@@ -468,7 +477,7 @@ margin-bottom:14px;
 <!-- ═══════ PANEL: INVENTORY ═══════ -->
 <div class="panel" id="inventoryPanel">
   <div class="panel-title">✦ CLEANING SUPPLIES INVENTORY ✦</div>
-  <div class="panel-sub">Mark off any supplies you do NOT have today.<br>Required items are flagged in red.</div>
+  <div class="panel-sub" id="inventoryPanelSub">Mark off any supplies you do NOT have today.<br>Required items are flagged in red.</div>
   <div class="scroll-area" id="inventoryList"></div>
   <div class="panel-footer">
     <button onclick="inventoryDone()">Done →</button>
@@ -521,6 +530,22 @@ margin-bottom:14px;
   <div class="task-items" id="taskItems"></div>
   <div class="panel-footer">
     <button onclick="markTaskDone()">✓ Mark as Done</button>
+    <button class="btn-later" onclick="doItLater()">⏱ Do it Later</button>
+    <button class="btn-skip" onclick="notToday()">✗ Not Today</button>
+  </div>
+  <div style="text-align:center;margin-top:8px;">
+    <button class="btn-nomats" id="noMatsBtn" onclick="noMaterials()" style="display:none">⚠ I don't have the materials</button>
+  </div>
+</div>
+
+<!-- ═══════ PANEL: BUY CHECK ═══════ -->
+<div class="panel" id="buyCheckPanel">
+  <div class="panel-title">✦ SUPPLY CHECK-IN ✦</div>
+  <div class="order-body" id="buyCheckBody"></div>
+  <div class="buy-item-name" id="buyItemName"></div>
+  <div class="panel-footer">
+    <button class="btn-accept" onclick="buyCheckYes()">✓ Already bought it</button>
+    <button class="btn-refuse" onclick="buyCheckNo()">✗ Still don't have it</button>
   </div>
 </div>
 
@@ -649,11 +674,29 @@ let missingItems   = [];
 let incompleteTasks= [];
 let currentTaskIndex = 0;
 
-let trust    = 50;   // 0–100
-let earnings = 0;    // £
+let trust    = 50;
+let earnings = 0;
 
-let prevMoodTier = "neutral"; // track for threshold alerts
-let dialogueIndices = { happy:0, neutral:0, angry:0 }; // rotating pointers
+let prevMoodTier = "neutral";
+let dialogueIndices = { happy:0, neutral:0, angry:0 };
+
+// Buy-check queue: items to ask "have you bought this yet?" during the shift
+let buyCheckQueue  = [];
+let buyCheckIndex  = 0;
+let afterBuyCheckCb = null;
+
+// ═══════════════════════════════════════════════════
+//  PERSISTENT INVENTORY (localStorage)
+// ═══════════════════════════════════════════════════
+const STORAGE_KEY = "dollhouse_missing_ids_v2";
+
+function loadSavedMissingIds(){
+  try{ let r=localStorage.getItem(STORAGE_KEY); return r?JSON.parse(r):[]; }
+  catch(e){ return []; }
+}
+function saveMissingIds(ids){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)); } catch(e){}
+}
 
 // Preload JSON
 Promise.all([
@@ -662,7 +705,6 @@ Promise.all([
 ]).then(([inv,tasks])=>{
   inventoryData = inv;
   tasksData     = tasks;
-  // Shuffle dialogue arrays for variety
   shuffle(happyDialogue);
   shuffle(neutralDialogue);
   shuffle(angryDialogue);
@@ -680,63 +722,56 @@ function shuffle(arr){
 //  TRUST & EARNINGS HELPERS
 // ═══════════════════════════════════════════════════
 function getMoodTier(){
-  if(trust >= 70) return "happy";
-  if(trust >= 30) return "neutral";
+  if(trust>=70) return "happy";
+  if(trust>=30) return "neutral";
   return "angry";
 }
 
 function addTrust(delta){
-  let oldTier = getMoodTier();
-  trust = Math.max(0, Math.min(100, trust + delta));
-  let newTier = getMoodTier();
+  let oldTier=getMoodTier();
+  trust=Math.max(0,Math.min(100,trust+delta));
+  let newTier=getMoodTier();
   updateHUD();
-  if(oldTier !== newTier) showMoodShiftBanner(newTier);
+  if(oldTier!==newTier) showMoodShiftBanner(newTier);
 }
 
-function addEarnings(amount){
-  earnings += amount;
-  updateHUD();
-}
+function addEarnings(amount){ earnings+=amount; updateHUD(); }
 
 function taskEarnings(task){
-  let base = [0,5,12,20][task.difficulty] || 5;
-  if(task.type === "Luxury") base += 5;
+  let base=[0,5,12,20][task.difficulty]||5;
+  if(task.type==="Luxury") base+=5;
   return base;
 }
 
 function updateHUD(){
-  let tier = getMoodTier();
-  let moodEl = document.getElementById("hudMood");
-  moodEl.className = "hud-mood " + tier;
-  if(tier === "happy")   moodEl.textContent = "💗 HAPPY";
-  if(tier === "neutral") moodEl.textContent = "😐 NEUTRAL";
-  if(tier === "angry")   moodEl.textContent = "🖤 DISAPPOINTED";
-
-  let fill = document.getElementById("trustFill");
-  fill.style.width = trust + "%";
-  fill.style.background = tier === "happy" ? "#ff66ff"
-                         : tier === "neutral" ? "#aaaaaa"
-                         : "#ff4466";
-  document.getElementById("trustNum").textContent = trust;
-  document.getElementById("hudEarnings").textContent = "💰 £" + earnings;
+  let tier=getMoodTier();
+  let moodEl=document.getElementById("hudMood");
+  moodEl.className="hud-mood "+tier;
+  if(tier==="happy")   moodEl.textContent="💗 HAPPY";
+  if(tier==="neutral") moodEl.textContent="😐 NEUTRAL";
+  if(tier==="angry")   moodEl.textContent="🖤 DISAPPOINTED";
+  let fill=document.getElementById("trustFill");
+  fill.style.width=trust+"%";
+  fill.style.background=tier==="happy"?"#ff66ff":tier==="neutral"?"#aaaaaa":"#ff4466";
+  document.getElementById("trustNum").textContent=trust;
+  document.getElementById("hudEarnings").textContent="💰 £"+earnings;
 }
 
-function showRewardNotif(money, trustDelta){
-  let notif = document.getElementById("rewardNotif");
-  document.getElementById("rewardMoney").textContent = "+£" + money;
-  document.getElementById("rewardTrust").textContent =
-    (trustDelta >= 0 ? "▲ Trust +" : "▼ Trust ") + trustDelta;
+function showRewardNotif(money,trustDelta){
+  let notif=document.getElementById("rewardNotif");
+  document.getElementById("rewardMoney").textContent="+£"+money;
+  document.getElementById("rewardTrust").textContent=(trustDelta>=0?"▲ Trust +":"▼ Trust ")+trustDelta;
   notif.classList.add("show");
-  setTimeout(()=>notif.classList.remove("show"), 1600);
+  setTimeout(()=>notif.classList.remove("show"),1600);
 }
 
 function showMoodShiftBanner(newTier){
-  let banner = document.getElementById("moodBanner");
-  if(newTier === "happy")   banner.textContent = "💗 The manager is warming up to you...";
-  if(newTier === "neutral") banner.textContent = "😐 The manager's mood has cooled.";
-  if(newTier === "angry")   banner.textContent = "🖤 The manager is losing patience.";
+  let banner=document.getElementById("moodBanner");
+  if(newTier==="happy")   banner.textContent="💗 The manager is warming up to you...";
+  if(newTier==="neutral") banner.textContent="😐 The manager's mood has cooled.";
+  if(newTier==="angry")   banner.textContent="🖤 The manager is losing patience.";
   banner.classList.add("show");
-  setTimeout(()=>banner.classList.remove("show"), 3000);
+  setTimeout(()=>banner.classList.remove("show"),3000);
 }
 
 
@@ -744,18 +779,14 @@ function showMoodShiftBanner(newTier){
 //  DIALOGUE SELECTION
 // ═══════════════════════════════════════════════════
 function getMoodDialogue(task){
-  let tier = getMoodTier();
-  let pool = tier === "happy" ? happyDialogue
-           : tier === "neutral" ? neutralDialogue
-           : angryDialogue;
-  let key  = tier === "happy" ? "happy"
-           : tier === "neutral" ? "neutral" : "angry";
-  let idx  = dialogueIndices[key] % pool.length;
+  let tier=getMoodTier();
+  let pool=tier==="happy"?happyDialogue:tier==="neutral"?neutralDialogue:angryDialogue;
+  let key=tier==="happy"?"happy":tier==="neutral"?"neutral":"angry";
+  let idx=dialogueIndices[key]%pool.length;
   dialogueIndices[key]++;
-  let line = pool[idx];
-  // Replace placeholders
-  line = line.replace(/\{task\}/g, task.name.toLowerCase());
-  line = line.replace(/\{room\}/g, task.room);
+  let line=pool[idx];
+  line=line.replace(/\{task\}/g,task.name.toLowerCase());
+  line=line.replace(/\{room\}/g,task.room);
   return line;
 }
 
@@ -772,70 +803,64 @@ function showPanel(id){
   if(id) document.getElementById(id).classList.add("active");
 }
 function setBossDialogue(text){
-  document.getElementById("bossDialogueText").textContent = text;
-  document.getElementById("bossDialogue").style.display = "block";
+  document.getElementById("bossDialogueText").textContent=text;
+  document.getElementById("bossDialogue").style.display="block";
 }
 function setAvatarDialogue(text){
-  document.getElementById("avatarDialogueText").textContent = text;
-  document.getElementById("avatarDialogue").style.display = text ? "block" : "none";
+  document.getElementById("avatarDialogueText").textContent=text;
+  document.getElementById("avatarDialogue").style.display=text?"block":"none";
 }
-function hideBossDialogue(){ document.getElementById("bossDialogue").style.display = "none"; }
-function hideAvatarDialogue(){ document.getElementById("avatarDialogue").style.display = "none"; }
+function hideBossDialogue(){ document.getElementById("bossDialogue").style.display="none"; }
+function hideAvatarDialogue(){ document.getElementById("avatarDialogue").style.display="none"; }
 
 
 // ═══════════════════════════════════════════════════
 //  TTS
 // ═══════════════════════════════════════════════════
-let voices = [];
-function loadVoices(){ voices = speechSynthesis.getVoices(); }
+let voices=[];
+function loadVoices(){ voices=speechSynthesis.getVoices(); }
 loadVoices();
-speechSynthesis.onvoiceschanged = loadVoices;
+speechSynthesis.onvoiceschanged=loadVoices;
 
 function getVoice(type){
-  let en = voices.filter(v=>v.lang.toLowerCase().includes("en"));
-  if(type === "avatar"){
-    let gb = en.filter(v=>v.lang==="en-GB"||v.lang.startsWith("en-GB"));
+  let en=voices.filter(v=>v.lang.toLowerCase().includes("en"));
+  if(type==="avatar"){
+    let gb=en.filter(v=>v.lang==="en-GB"||v.lang.startsWith("en-GB"));
     return gb.find(v=>v.name.toLowerCase().includes("google uk english female"))
-      || gb.find(v=>v.name.toLowerCase().includes("female"))
-      || gb[0] || en[0];
+      ||gb.find(v=>v.name.toLowerCase().includes("female"))
+      ||gb[0]||en[0];
   }
-  if(type === "boss"){
-    let us = en.filter(v=>v.lang==="en-US");
+  if(type==="boss"){
+    let us=en.filter(v=>v.lang==="en-US");
     return us.find(v=>v.name.toLowerCase().includes("samantha"))
-      || us.find(v=>v.name.toLowerCase().includes("female"))
-      || us[0] || en[0];
+      ||us.find(v=>v.name.toLowerCase().includes("female"))
+      ||us[0]||en[0];
   }
 }
 
-function speak(text, type, onDone){
+function speak(text,type,onDone){
   speechSynthesis.cancel();
   function doSpeak(){
     if(voices.length===0) voices=speechSynthesis.getVoices();
-    let speech = new SpeechSynthesisUtterance(text);
-    let voice  = getVoice(type);
-    if(voice) speech.voice = voice;
+    let speech=new SpeechSynthesisUtterance(text);
+    let voice=getVoice(type);
+    if(voice) speech.voice=voice;
     if(type==="avatar"){ speech.pitch=1.6; speech.rate=1.05; }
-    if(type==="boss")  { speech.pitch=1.4; speech.rate=0.85; }
-    speech.volume = 1;
-
-    // Watchdog: Chrome often drops onend — fire callback after estimated duration anyway
-    let rate   = type==="boss" ? 0.85 : 1.05;
-    let estMs  = Math.max(3500, (text.length / 5) * (60000 / 130) / rate) + 2500;
-    let fired  = false;
-    let wdog   = setTimeout(()=>{ if(!fired){ fired=true; stopTalking(); if(onDone) onDone(); } }, estMs);
-
-    speech.onend = function(){
+    if(type==="boss")  { speech.pitch=2.0; speech.rate=0.85; }
+    speech.volume=1;
+    let rate=type==="boss"?0.85:1.05;
+    let estMs=Math.max(3500,(text.length/5)*(60000/130)/rate)+2500;
+    let fired=false;
+    let wdog=setTimeout(()=>{ if(!fired){fired=true;stopTalking();if(onDone)onDone();} },estMs);
+    speech.onend=function(){
       if(fired) return;
-      fired = true;
-      clearTimeout(wdog);
-      stopTalking();
-      if(onDone) onDone();
+      fired=true; clearTimeout(wdog); stopTalking(); if(onDone) onDone();
     };
-    setTimeout(()=>speechSynthesis.speak(speech), 150);
+    setTimeout(()=>speechSynthesis.speak(speech),150);
   }
-  if(voices.length > 0){ doSpeak(); }
+  if(voices.length>0){ doSpeak(); }
   else{
-    let a=0, poll=setInterval(()=>{
+    let a=0,poll=setInterval(()=>{
       voices=speechSynthesis.getVoices(); a++;
       if(voices.length>0||a>30){ clearInterval(poll); doSpeak(); }
     },100);
@@ -844,28 +869,15 @@ function speak(text, type, onDone){
 
 
 // ═══════════════════════════════════════════════════
-//  TALKING HELPERS
+//  TALKING HELPERS  (GIF-based — just show/hide)
 // ═══════════════════════════════════════════════════
-function playTalking(talkingID, idleID){
-  document.getElementById(idleID).style.display = "none";
-  let t = document.getElementById(talkingID);
-  t.style.display = "block";
-  if(t.tagName==="VIDEO"){
-    t.muted=true; t.volume=0; t.currentTime=0;
-    if(t.readyState>=3){ t.play(); }
-    else{
-      t.addEventListener("canplaythrough",function h(){
-        t.removeEventListener("canplaythrough",h); t.play();
-      },{once:true});
-      t.load();
-    }
-  }
+function playTalking(talkingID,idleID){
+  document.getElementById(idleID).style.display="none";
+  document.getElementById(talkingID).style.display="block";
 }
 function stopTalking(){
   ["bossTalking","avatarTalking"].forEach(id=>{
-    let el=document.getElementById(id);
-    if(el.tagName==="VIDEO"){ el.pause(); el.currentTime=0; }
-    el.style.display="none";
+    document.getElementById(id).style.display="none";
   });
   ["bossIdle","avatarIdle"].forEach(id=>{
     document.getElementById(id).style.display="block";
@@ -877,16 +889,14 @@ function stopTalking(){
 //  START
 // ═══════════════════════════════════════════════════
 function startGame(){
-  document.querySelector(".title-screen").style.display = "none";
+  document.querySelector(".title-screen").style.display="none";
   let u=new SpeechSynthesisUtterance(""); u.volume=0; speechSynthesis.speak(u);
   showScene("exterior","videoScene");
   let video=document.getElementById("hotelVideo");
   function playWhenReady(v){
     if(v.readyState>=3){ v.play(); }
     else{
-      v.addEventListener("canplaythrough",function h(){
-        v.removeEventListener("canplaythrough",h); v.play();
-      },{once:true});
+      v.addEventListener("canplaythrough",function h(){ v.removeEventListener("canplaythrough",h); v.play(); },{once:true});
       v.load();
     }
   }
@@ -897,15 +907,16 @@ document.getElementById("hotelVideo").onended=function(){ transitionToLobby(); }
 
 function transitionToLobby(){
   let flash=document.getElementById("flash");
+  flash.style.transition="opacity 1.4s ease";
   flash.style.opacity=1;
   setTimeout(()=>{
     showScene("videoScene","lobby");
-    flash.style.opacity=0;
-    // Show HUD
     document.getElementById("hud").style.display="flex";
     updateHUD();
-    setTimeout(()=>bossTalkWelcome(), 1500);
-  },900);
+    flash.style.transition="opacity 2s ease";
+    flash.style.opacity=0;
+    setTimeout(()=>bossTalkWelcome(),2200);
+  },1500);
 }
 
 
@@ -913,10 +924,10 @@ function transitionToLobby(){
 //  STAGE 1 — WELCOME
 // ═══════════════════════════════════════════════════
 function bossTalkWelcome(){
-  let line = "Welcome to The Dollhouse Hotel. This place has lost its sparkle. I need someone who can restore it.";
+  let line="Welcome to The Dollhouse Hotel. This place has lost its sparkle. I need someone who can restore it.";
   setBossDialogue("\u201c"+line+"\u201d");
   playTalking("bossTalking","bossIdle");
-  speak(line,"boss",()=>{ setTimeout(()=>bossInventoryPrompt(), 1200); });
+  speak(line,"boss",()=>{ setTimeout(()=>bossInventoryPrompt(),1200); });
 }
 
 
@@ -924,10 +935,13 @@ function bossTalkWelcome(){
 //  STAGE 2 — INVENTORY
 // ═══════════════════════════════════════════════════
 function bossInventoryPrompt(){
-  let line = "Before we begin, I need you to take a full inventory of your cleaning supplies. Mark off anything you don't have with you today.";
+  let savedIds=loadSavedMissingIds();
+  let line=savedIds.length>0
+    ? "Before we begin, let's check your supplies. I've flagged the items you were missing last time — let me know if you've managed to get them."
+    : "Before we begin, I need you to take a full inventory of your cleaning supplies. Mark off anything you don't have with you today.";
   setBossDialogue("\u201c"+line+"\u201d");
   playTalking("bossTalking","bossIdle");
-  speak(line,"boss",()=>{ setTimeout(()=>openInventoryPanel(), 600); });
+  speak(line,"boss",()=>{ setTimeout(()=>openInventoryPanel(),600); });
 }
 
 function openInventoryPanel(){
@@ -937,6 +951,14 @@ function openInventoryPanel(){
 }
 
 function buildInventoryList(){
+  let savedIds=loadSavedMissingIds();
+  let isReturning=savedIds.length>0;
+
+  let sub=document.getElementById("inventoryPanelSub");
+  sub.innerHTML=isReturning
+    ? `Items <span style="color:#ffaa00">still missing from last time</span> are pre-ticked.<br>Untick anything you've now bought. Tick anything else you're missing today.`
+    : `Mark off any supplies you do NOT have today.<br>Required items are flagged in red.`;
+
   let container=document.getElementById("inventoryList");
   container.innerHTML="";
   let cats={};
@@ -949,9 +971,12 @@ function buildInventoryList(){
     h.className="cat-title"; h.textContent=cat.toUpperCase();
     container.appendChild(h);
     items.forEach(item=>{
+      let wasMissing=savedIds.includes(item.id);
       let row=document.createElement("label");
-      row.className="item-row";
-      row.innerHTML=`<input type="checkbox" id="inv-${item.id}" data-id="${item.id}"><span>${item.name}</span>${item.required?'<span class="req-tag">REQUIRED</span>':''}`;
+      row.className="item-row"+(wasMissing?" is-missing":"");
+      let warningTag=wasMissing?`<span class="still-missing-tag">⚠ STILL MISSING?</span>`:"";
+      let reqTag=item.required?`<span class="req-tag">REQUIRED</span>`:"";
+      row.innerHTML=`<input type="checkbox" id="inv-${item.id}" data-id="${item.id}" ${wasMissing?"checked":""}><span>${item.name}</span>${warningTag}${reqTag}`;
       row.querySelector("input").addEventListener("change",function(){
         row.classList.toggle("is-missing",this.checked);
       });
@@ -961,17 +986,40 @@ function buildInventoryList(){
 }
 
 function inventoryDone(){
+  let savedIds=loadSavedMissingIds();
   missingItems=[];
   document.querySelectorAll("#inventoryList input:checked").forEach(cb=>{
     let found=inventoryData.find(i=>i.id===cb.dataset.id);
     if(found) missingItems.push(found);
   });
-  // Trust penalty for many missing required items
-  let missingRequired=missingItems.filter(i=>i.required).length;
-  if(missingRequired>0) addTrust(-Math.min(missingRequired*2, 10));
+
+  let currentIds=missingItems.map(i=>i.id);
+  let stillMissingRequired=missingItems.filter(i=>i.required&&savedIds.includes(i.id));
+  let newMissingRequired=missingItems.filter(i=>i.required&&!savedIds.includes(i.id));
+
+  // Repeat penalty is harsher
+  if(stillMissingRequired.length>0) addTrust(-Math.min(stillMissingRequired.length*4,20));
+  if(newMissingRequired.length>0)    addTrust(-Math.min(newMissingRequired.length*2,10));
+
+  // Items that WERE missing but are now gone → they bought them
+  let nowBoughtIds=savedIds.filter(id=>!currentIds.includes(id));
+  if(nowBoughtIds.length>0) addTrust(nowBoughtIds.length*2); // small reward for restocking
+
+  saveMissingIds(currentIds);
+
+  // Build buy-check queue from missing items (asked mid-shift)
+  buyCheckQueue=missingItems.filter(i=>!i.required).slice(0,5); // ask about up to 5 optional items
+  buyCheckIndex=0;
+
   showPanel(null);
-  if(missingItems.length>0) bossOrderPrompt();
-  else bossNoMissingItems();
+
+  if(stillMissingRequired.length>0){
+    bossRepeatMissingPrompt(stillMissingRequired,missingItems);
+  } else if(missingItems.length>0){
+    bossOrderPrompt();
+  } else {
+    bossNoMissingItems();
+  }
 }
 
 
@@ -979,16 +1027,44 @@ function inventoryDone(){
 //  STAGE 3 — ORDER DECISION
 // ═══════════════════════════════════════════════════
 function bossNoMissingItems(){
-  let line="Wonderful — you have everything you need. Let's get to work!";
+  let hadMissing=loadSavedMissingIds().length>0;
+  let line=hadMissing
+    ? "I see you've sorted everything out since last time. Well done — that's exactly the kind of initiative I expect. Let's get to work!"
+    : "Wonderful — you have everything you need. Let's get to work!";
   setBossDialogue("\u201c"+line+"\u201d");
   document.getElementById("bossDialogue").style.display="block";
   playTalking("bossTalking","bossIdle");
-  speak(line,"boss",()=>{ addTrust(3); setTimeout(()=>bossTasksPrompt(), 800); });
+  speak(line,"boss",()=>{ addTrust(hadMissing?6:3); setTimeout(()=>bossTasksPrompt(),800); });
+}
+
+function bossRepeatMissingPrompt(stillMissing,allMissing){
+  let names=stillMissing.map(i=>i.name).slice(0,3).join(", ")+(stillMissing.length>3?" and more":"");
+  let repeatLines=[
+    `I specifically mentioned ${names} last time. You're still showing up without ${stillMissing.length>1?"them":"it"}. That is not acceptable.`,
+    `We spoke about ${names} last shift. You still haven't sorted ${stillMissing.length>1?"them":"it"} out. This is costing us.`,
+    `${names} — missing again. I shouldn't have to repeat myself. This reflects very poorly on you.`,
+    `You were warned about ${names} last time. Still not here. Every time this happens it lets the whole hotel down.`
+  ];
+  let line=repeatLines[Math.floor(Math.random()*repeatLines.length)];
+  setBossDialogue("\u201c"+line+"\u201d");
+  document.getElementById("bossDialogue").style.display="block";
+  playTalking("bossTalking","bossIdle");
+  speak(line,"boss",()=>{
+    let n=allMissing.length;
+    let orderLine=`You are missing ${n} item${n>1?"s":""}. Would you like to order ${n>1?"them":"it"} for delivery now?`;
+    document.getElementById("orderBody").textContent=orderLine;
+    document.getElementById("missingListEl").innerHTML=allMissing.map(i=>{
+      let was=stillMissing.find(s=>s.id===i.id);
+      return `${was?"⚠ ":"• "}${i.name}${was?` <span style='color:#ffaa00;font-size:10px'>(repeat)</span>`:""}`;
+    }).join("<br>");
+    hideBossDialogue();
+    showPanel("orderPanel");
+  });
 }
 
 function bossOrderPrompt(){
   let n=missingItems.length;
-  let line=`You are missing ${n} item${n>1?"s":""}. Would you like to order ${n>1?"them":"it"} for delivery in the next 30 minutes via UberEats, Deliveroo, DoorDash, or an instant delivery service?`;
+  let line=`You are missing ${n} item${n>1?"s":""}. Would you like to order ${n>1?"them":"it"} for delivery in the next 30 minutes?`;
   setBossDialogue("\u201c"+line+"\u201d");
   document.getElementById("bossDialogue").style.display="block";
   playTalking("bossTalking","bossIdle");
@@ -1023,7 +1099,7 @@ function refuseOrder(){
   setAvatarDialogue("\u201c"+line+"\u201d");
   hideBossDialogue();
   playTalking("avatarTalking","avatarIdle");
-  speak(line,"avatar",()=>{ hideAvatarDialogue(); setTimeout(()=>bossTasksPrompt(), 600); });
+  speak(line,"avatar",()=>{ hideAvatarDialogue(); setTimeout(()=>bossTasksPrompt(),600); });
 }
 
 function proceedToTasks(){
@@ -1040,7 +1116,7 @@ function bossTasksPrompt(){
   setBossDialogue("\u201c"+line+"\u201d");
   document.getElementById("bossDialogue").style.display="block";
   playTalking("bossTalking","bossIdle");
-  speak(line,"boss",()=>{ setTimeout(()=>openTasksPanel(), 600); });
+  speak(line,"boss",()=>{ setTimeout(()=>openTasksPanel(),600); });
 }
 
 function openTasksPanel(){
@@ -1064,7 +1140,7 @@ function buildTasksList(){
     tasks.forEach(task=>{
       let row=document.createElement("label");
       row.className="task-item-row";
-      row.innerHTML=`<input type="checkbox" id="task-${task.id}" data-id="${task.id}"><span>${task.name}</span>${task.type==="Luxury"?'<span class="task-room-tag">✦ LUXURY</span>':''}`;
+      row.innerHTML=`<input type="checkbox" id="task-${task.id}" data-id="${task.id}"><span>${task.name}</span>`;
       row.querySelector("input").addEventListener("change",function(){
         row.classList.toggle("is-done",this.checked);
       });
@@ -1090,33 +1166,48 @@ function tasksChecklistDone(){
 function bossAssignFirst(){
   let n=incompleteTasks.length;
   let firstTask=incompleteTasks[0];
-  let moodOpener = getMoodTier()==="happy"
-    ? `Lovely! You have ${n} task${n>1?"s":""} ahead of you.`
-    : getMoodTier()==="neutral"
-    ? `Good. You have ${n} task${n>1?"s":""} remaining today.`
-    : `You have ${n} task${n>1?"s":""} that still need your attention.`;
+  let moodOpener=getMoodTier()==="happy"
+    ?`Lovely! You have ${n} task${n>1?"s":""} ahead of you.`
+    :getMoodTier()==="neutral"
+    ?`Good. You have ${n} task${n>1?"s":""} remaining today.`
+    :`You have ${n} task${n>1?"s":""} that still need your attention.`;
   let line=`${moodOpener} ${getMoodDialogue(firstTask)}`;
   setBossDialogue("\u201c"+line+"\u201d");
   document.getElementById("bossDialogue").style.display="block";
   playTalking("bossTalking","bossIdle");
-  speak(line,"boss",()=>{ setTimeout(()=>showTaskCard(0), 500); });
+  speak(line,"boss",()=>{ setTimeout(()=>showTaskCard(0),500); });
 }
 
 function showTaskCard(index){
   if(index>=incompleteTasks.length){ allTasksDone(); return; }
+
+  // Every ~10 tasks, check in on a missing item (if any)
+  if(index>0 && index%10===0 && buyCheckQueue.length>0 && buyCheckIndex<buyCheckQueue.length){
+    afterBuyCheckCb=()=>showTaskCard(index);
+    showBuyCheckPanel();
+    return;
+  }
+
   let task=incompleteTasks[index];
   let total=incompleteTasks.length;
   document.getElementById("taskProgress").textContent=`Task ${index+1} of ${total}`;
   document.getElementById("taskRoom").textContent=task.room.toUpperCase();
   document.getElementById("taskName").textContent=task.name;
   let items=task.requiredItems&&task.requiredItems.length>0
-    ? "You'll need: "+task.requiredItems.join(", ") : "";
+    ?"You'll need: "+task.requiredItems.join(", "):"";
   document.getElementById("taskItems").textContent=items;
+
+  // Show "no materials" button only if task has required items that are in missing list
+  let noMatsBtn=document.getElementById("noMatsBtn");
+  let hasMissingMats=task.requiredItems&&task.requiredItems.some(ri=>
+    missingItems.some(mi=>mi.name.toLowerCase()===ri.toLowerCase())
+  );
+  noMatsBtn.style.display=hasMissingMats?"inline-block":"none";
+
   hideBossDialogue();
   hideAvatarDialogue();
   showPanel("taskCardPanel");
 
-  // Speak mood-based dialogue for tasks after the first
   if(index>0){
     let line=getMoodDialogue(task);
     setBossDialogue("\u201c"+line+"\u201d");
@@ -1129,26 +1220,12 @@ function showTaskCard(index){
 function markTaskDone(){
   showPanel(null);
   let task=incompleteTasks[currentTaskIndex];
-
-  // Calculate reward
   let earned=taskEarnings(task);
-  let trustGain=task.type==="Luxury" ? 3 : 2;
-
+  let trustGain=task.type==="Luxury"?3:2;
   addEarnings(earned);
   addTrust(trustGain);
-  showRewardNotif(earned, trustGain);
-
-  // Avatar confirms
-  let confirmLines=[
-    "Done! What's next?",
-    "All done. On to the next one!",
-    "Complete! Ready for the next task.",
-    "Finished! What else needs doing?",
-    "Done and dusted!",
-    "That's taken care of.",
-    "All sorted!",
-    "Moving on!"
-  ];
+  showRewardNotif(earned,trustGain);
+  let confirmLines=["Done! What's next?","All done. On to the next one!","Complete! Ready for the next task.","Finished! What else needs doing?","Done and dusted!","That's taken care of.","All sorted!","Moving on!"];
   let line=confirmLines[currentTaskIndex%confirmLines.length];
   setAvatarDialogue("\u201c"+line+"\u201d");
   document.getElementById("avatarDialogue").style.display="block";
@@ -1161,6 +1238,157 @@ function markTaskDone(){
   });
 }
 
+function doItLater(){
+  showPanel(null);
+  let task=incompleteTasks[currentTaskIndex];
+  incompleteTasks.splice(currentTaskIndex,1);
+  incompleteTasks.push(task);
+  addTrust(-2);
+  let lines=["I'll come back to that one.","I'll get to it later.","I'll circle back to that.","Later — I'll finish it before end of shift."];
+  let line=lines[currentTaskIndex%lines.length];
+  setAvatarDialogue("\u201c"+line+"\u201d");
+  document.getElementById("avatarDialogue").style.display="block";
+  playTalking("avatarTalking","avatarIdle");
+  speak(line,"avatar",()=>{
+    hideAvatarDialogue();
+    if(currentTaskIndex>=incompleteTasks.length) currentTaskIndex=0;
+    showTaskCard(currentTaskIndex);
+  });
+}
+
+function notToday(){
+  showPanel(null);
+  let task=incompleteTasks[currentTaskIndex];
+  incompleteTasks.splice(currentTaskIndex,1);
+  let penalty=task.required?8:5;
+  addTrust(-penalty);
+  let lines=["I'm not doing that today.","Not today — I'll skip it.","That one can wait.","I'm leaving that for now."];
+  let line=lines[currentTaskIndex%lines.length];
+  setAvatarDialogue("\u201c"+line+"\u201d");
+  document.getElementById("avatarDialogue").style.display="block";
+  playTalking("avatarTalking","avatarIdle");
+  speak(line,"avatar",()=>{
+    hideAvatarDialogue();
+    let bossLines=["That task needed to be done. I'm very disappointed.","Skipping tasks is not how we operate here. Trust takes time to rebuild.","That reflects badly on your commitment. I'll be noting this.","I expected better than that. Our guests deserve more effort."];
+    let bossLine=bossLines[Math.floor(Math.random()*bossLines.length)];
+    setBossDialogue("\u201c"+bossLine+"\u201d");
+    document.getElementById("bossDialogue").style.display="block";
+    playTalking("bossTalking","bossIdle");
+    speak(bossLine,"boss",()=>{
+      hideBossDialogue();
+      if(incompleteTasks.length===0) allTasksDone();
+      else showTaskCard(currentTaskIndex>=incompleteTasks.length?0:currentTaskIndex);
+    });
+  });
+}
+
+function noMaterials(){
+  showPanel(null);
+  let task=incompleteTasks[currentTaskIndex];
+  // Mark task's required items as missing in inventory
+  let newlyMissing=[];
+  task.requiredItems.forEach(ri=>{
+    let inv=inventoryData.find(i=>i.name.toLowerCase()===ri.toLowerCase());
+    if(inv&&!missingItems.find(m=>m.id===inv.id)){
+      missingItems.push(inv);
+      newlyMissing.push(inv);
+    }
+  });
+  // Save updated missing list
+  saveMissingIds(missingItems.map(i=>i.id));
+  // Add newly flagged items to buy-check queue
+  newlyMissing.forEach(i=>{ if(!buyCheckQueue.find(b=>b.id===i.id)) buyCheckQueue.push(i); });
+  addTrust(-3);
+  let line=`I don't have the materials for this one. I'm missing: ${task.requiredItems.join(", ")}.`;
+  setAvatarDialogue("\u201c"+line+"\u201d");
+  document.getElementById("avatarDialogue").style.display="block";
+  playTalking("avatarTalking","avatarIdle");
+  speak(line,"avatar",()=>{
+    hideAvatarDialogue();
+    // Move task to later and continue
+    incompleteTasks.splice(currentTaskIndex,1);
+    incompleteTasks.push(task);
+    if(currentTaskIndex>=incompleteTasks.length) currentTaskIndex=0;
+    showTaskCard(currentTaskIndex);
+  });
+}
+
+
+// ═══════════════════════════════════════════════════
+//  BUY CHECK-IN (mid-shift "have you bought X yet?")
+// ═══════════════════════════════════════════════════
+function showBuyCheckPanel(){
+  let item=buyCheckQueue[buyCheckIndex];
+  let bossCheckLines=[
+    `By the way — have you managed to get ${item.name} yet?`,
+    `Quick check: did you pick up ${item.name} since last time?`,
+    `I wanted to ask — have you bought ${item.name} yet?`,
+    `Before we continue — ${item.name}. Do you have it now?`
+  ];
+  let bossLine=bossCheckLines[buyCheckIndex%bossCheckLines.length];
+  setBossDialogue("\u201c"+bossLine+"\u201d");
+  document.getElementById("bossDialogue").style.display="block";
+  playTalking("bossTalking","bossIdle");
+  speak(bossLine,"boss",()=>{
+    hideBossDialogue();
+    document.getElementById("buyCheckBody").textContent=bossLine;
+    document.getElementById("buyItemName").textContent=item.name;
+    showPanel("buyCheckPanel");
+  });
+}
+
+function buyCheckYes(){
+  showPanel(null);
+  let item=buyCheckQueue[buyCheckIndex];
+  // Remove from missing list
+  missingItems=missingItems.filter(m=>m.id!==item.id);
+  saveMissingIds(missingItems.map(i=>i.id));
+  addTrust(3);
+  let line="Yes! I picked it up.";
+  setAvatarDialogue("\u201c"+line+"\u201d");
+  document.getElementById("avatarDialogue").style.display="block";
+  playTalking("avatarTalking","avatarIdle");
+  speak(line,"avatar",()=>{
+    hideAvatarDialogue();
+    let bossLine="Good. That's what I like to see.";
+    setBossDialogue("\u201c"+bossLine+"\u201d");
+    document.getElementById("bossDialogue").style.display="block";
+    playTalking("bossTalking","bossIdle");
+    speak(bossLine,"boss",()=>{
+      hideBossDialogue();
+      buyCheckIndex++;
+      if(afterBuyCheckCb){ let cb=afterBuyCheckCb; afterBuyCheckCb=null; cb(); }
+    });
+  });
+}
+
+function buyCheckNo(){
+  showPanel(null);
+  addTrust(-2);
+  let item=buyCheckQueue[buyCheckIndex];
+  let line="Not yet — I haven't got it.";
+  setAvatarDialogue("\u201c"+line+"\u201d");
+  document.getElementById("avatarDialogue").style.display="block";
+  playTalking("avatarTalking","avatarIdle");
+  speak(line,"avatar",()=>{
+    hideAvatarDialogue();
+    let bossLines=[
+      `That really needs sorting, darling. ${item.name} isn't optional.`,
+      `I'm keeping note of that. Please make sure you have ${item.name} for next time.`,
+      `That's disappointing. Make sure ${item.name} is on your shopping list.`
+    ];
+    let bossLine=bossLines[Math.floor(Math.random()*bossLines.length)];
+    setBossDialogue("\u201c"+bossLine+"\u201d");
+    document.getElementById("bossDialogue").style.display="block";
+    playTalking("bossTalking","bossIdle");
+    speak(bossLine,"boss",()=>{
+      hideBossDialogue();
+      buyCheckIndex++;
+      if(afterBuyCheckCb){ let cb=afterBuyCheckCb; afterBuyCheckCb=null; cb(); }
+    });
+  });
+}
+
 
 // ═══════════════════════════════════════════════════
 //  STAGE 6 — SHIFT COMPLETE
@@ -1169,23 +1397,22 @@ function allTasksDone(){
   showPanel(null);
   let tier=getMoodTier();
   let line=tier==="happy"
-    ? "Exceptional work today. The Dollhouse Hotel is looking absolutely flawless. I'm so proud of you, darling. The guests couldn't ask for better."
-    : tier==="neutral"
-    ? "Good work today. The hotel is in order and our guests are well taken care of. See you tomorrow."
-    : "The tasks are complete. The hotel is presentable. Tomorrow I expect a higher standard from you.";
-
+    ?"Exceptional work today. The Dollhouse Hotel is looking absolutely flawless. I'm so proud of you, darling. The guests couldn't ask for better."
+    :tier==="neutral"
+    ?"Good work today. The hotel is in order and our guests are well taken care of. See you tomorrow."
+    :"The tasks are complete. The hotel is presentable. Tomorrow I expect a higher standard from you.";
   setBossDialogue("\u201c"+line+"\u201d");
   document.getElementById("bossDialogue").style.display="block";
   playTalking("bossTalking","bossIdle");
   speak(line,"boss",()=>{
     hideBossDialogue();
     setTimeout(()=>{
-      let tier=getMoodTier();
+      let t=getMoodTier();
       document.getElementById("allDoneTotal").textContent="£"+earnings+" earned today";
       document.getElementById("allDoneTrust").textContent=
-        tier==="happy" ? "💗 Manager mood: Happy · Trust "+trust+"/100"
-        : tier==="neutral" ? "😐 Manager mood: Neutral · Trust "+trust+"/100"
-        : "🖤 Manager mood: Disappointed · Trust "+trust+"/100";
+        t==="happy"?"💗 Manager mood: Happy · Trust "+trust+"/100"
+        :t==="neutral"?"😐 Manager mood: Neutral · Trust "+trust+"/100"
+        :"🖤 Manager mood: Disappointed · Trust "+trust+"/100";
       document.getElementById("allDoneBody").innerHTML=
         "You completed all your tasks for today.<br><br>"+
         "<span style='color:#ff00ff'>The Dollhouse Hotel is sparkling.</span><br><br>"+
