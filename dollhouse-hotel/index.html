@@ -104,10 +104,10 @@ line-height:1.5;
 #flash{
 position:absolute;
 inset:0;
-background:white;
+background:black;
 opacity:0;
 z-index:100;
-transition:opacity 1s;
+transition:opacity 1.4s ease;
 pointer-events:none;
 }
 
@@ -909,15 +909,19 @@ document.getElementById("hotelVideo").onended=function(){ transitionToLobby(); }
 
 function transitionToLobby(){
   let flash=document.getElementById("flash");
+  // Fade to black
+  flash.style.transition="opacity 1.4s ease";
   flash.style.opacity=1;
   setTimeout(()=>{
+    // Swap scenes while screen is fully black
     showScene("videoScene","lobby");
-    flash.style.opacity=0;
-    // Show HUD
     document.getElementById("hud").style.display="flex";
     updateHUD();
-    setTimeout(()=>bossTalkWelcome(), 1500);
-  },900);
+    // Fade back in slowly
+    flash.style.transition="opacity 2s ease";
+    flash.style.opacity=0;
+    setTimeout(()=>bossTalkWelcome(), 2200);
+  },1500);
 }
 
 
