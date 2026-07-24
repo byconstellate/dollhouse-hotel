@@ -63,10 +63,10 @@ object-fit:cover;
 
 position:absolute;
 
-top:50%;
+bottom:48px;
 left:50%;
 
-transform:translate(-50%,-50%);
+transform:translateX(-50%);
 
 text-align:center;
 
@@ -103,8 +103,9 @@ border-radius:40px;
 
 border:2px solid #ff00ff;
 
-background:
-rgba(255,255,255,.85);
+background:transparent;
+
+color:white;
 
 font-family:"Courier New", monospace;
 
@@ -307,13 +308,6 @@ pointer-events:none;
 <div class="title-screen">
 
 
-<h1>The Dollhouse Hotel</h1>
-
-
-<p>Your first day begins.</p>
-
-
-
 <button onclick="startGame()">
 
 Enter Hotel
@@ -380,7 +374,8 @@ class="character">
 id="avatarTalking"
 class="character talking"
 muted
-playsinline>
+playsinline
+preload="auto">
 
 
 <source src="avatar-talking.mp4">
@@ -409,17 +404,10 @@ id="bossIdle"
 class="character">
 
 
-<video
+<img
 id="bossTalking"
-class="character talking"
-muted
-playsinline>
-
-
-<source src="boss-talking.mp4">
-
-
-</video>
+src="boss-talking.gif"
+class="character talking">
 
 
 </div>
@@ -593,35 +581,36 @@ bossTalk();
 // TALKING VIDEO
 
 
-function playTalking(videoID,imageID){
+function playTalking(talkingID,idleID){
 
 
-let image =
-document.getElementById(imageID);
+let idle =
+document.getElementById(idleID);
 
 
-let video =
-document.getElementById(videoID);
-
-
-
-image.style.display="none";
-
-
-video.style.display="block";
+let talking =
+document.getElementById(talkingID);
 
 
 
-video.muted=true;
-
-video.volume=0;
+idle.style.display="none";
 
 
-video.currentTime=0;
+talking.style.display="block";
 
 
-video.play();
 
+if(talking.tagName==="VIDEO"){
+
+talking.muted=true;
+
+talking.volume=0;
+
+talking.currentTime=0;
+
+talking.play();
+
+}
 
 
 }
@@ -640,15 +629,20 @@ function stopTalking(){
 ].forEach(id=>{
 
 
-let video =
+let el =
 document.getElementById(id);
 
 
-video.pause();
+if(el.tagName==="VIDEO"){
 
-video.currentTime=0;
+el.pause();
 
-video.style.display="none";
+el.currentTime=0;
+
+}
+
+
+el.style.display="none";
 
 
 });
@@ -767,37 +761,32 @@ v.lang.toLowerCase().includes("en")
 );
 
 
-// Known female voice name patterns across browsers/OS
-let femaleNames=[
-"samantha","karen","victoria","moira","fiona",
-"serena","zira","hazel","susan","kate","emily",
-"tessa","nicky","ava","allison","joanna",
-"google uk english female","google us english female"
-];
-
-
-function isFemale(v){
-let n=v.name.toLowerCase();
-return femaleNames.some(f=>n.includes(f));
-}
-
-
 if(type==="avatar"){
-// Female UK English
-let gb=english.filter(v=>v.lang==="en-GB"||v.lang.startsWith("en-GB"));
-return gb.find(v=>isFemale(v))
+// Google UK English Female (en-GB)
+let gb=english.filter(v=>
+v.lang==="en-GB"||v.lang.startsWith("en-GB")
+);
+return gb.find(v=>
+v.name.toLowerCase().includes("google uk english female")
+)
+||gb.find(v=>
+v.name.toLowerCase().includes("female")
+)
 ||gb[0]
-||english.find(v=>isFemale(v))
 ||english[0];
 }
 
 
 if(type==="boss"){
-// Female American English
+// Samantha (en-US)
 let us=english.filter(v=>v.lang==="en-US");
-return us.find(v=>isFemale(v))
+return us.find(v=>
+v.name.toLowerCase().includes("samantha")
+)
+||us.find(v=>
+v.name.toLowerCase().includes("female")
+)
 ||us[0]
-||english.find(v=>isFemale(v))
 ||english[0];
 }
 
@@ -838,7 +827,7 @@ speech.voice=voice;
 
 if(type==="avatar"){
 
-speech.pitch=1.2;
+speech.pitch=1.6;
 
 speech.rate=1.05;
 
