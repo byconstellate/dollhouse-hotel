@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>The Dollhouse Hotel</title>
+
+<style>
+
+html,body{
+margin:0;
+width:100%;
+height:100%;
+overflow:hidden;
+background:black;
+font-family:"Courier New", monospace;
+}
+
+
+.scene{
+
+position:absolute;
+inset:0;
+opacity:0;
+
+transition:opacity 2.5s ease;
+
+pointer-events:none;
+
+}
+
+
+.scene.show{
+
+opacity:1;
+pointer-events:auto;
+
+}
+
+
+.fullscreen{
+
+width:100%;
+height:100%;
+object-fit:cover;
+
+}
+
+
+video{
+
+width:100%;
+height:100%;
+object-fit:cover;
+
+}
+
+
+
+/* TITLE */
+
+.title-screen{
+
+position:absolute;
+
+bottom:48px;
+left:50%;
+
+transform:translateX(-50%);
+
+text-align:center;
+
+color:white;
+
+text-shadow:
+0 3px 10px black;
+
+}
+
+
+
+.title-screen h1{
+
+font-size:55px;
+
+}
+
+
+
+.title-screen p{
+
+font-size:24px;
+
+}
+
+
+
+button{
+
+padding:16px 45px;
+
+border-radius:40px;
+
+border:2px solid #ff00ff;
+
+background:transparent;
+
+color:white;
+
+font-family:"Courier New", monospace;
+
+font-size:20px;
+
+cursor:pointer;
+
+}
+
+
+
+
+
+
+/* CHARACTERS */
+
+
+.character-container{
+
+position:absolute;
+
+bottom:0;
+
+height:78%;
+
+z-index:20;
+
+}
+
+
+
+.character{
+
+height:100%;
+
+object-fit:contain;
+
+}
+
+
+
+.boss-position{
+
+right:8%;
+
+transform:translateX(500px);
+
+animation:
+bossEnter 2s forwards;
+
+}
+
+
+
+.avatar-position{
+
+left:8%;
+
+transform:translateX(-500px);
+
+animation:
+avatarEnter 2s forwards;
+
+}
+
+
+
+@keyframes bossEnter{
+
+to{
+transform:translateX(0);
+}
+
+}
+
+
+
+@keyframes avatarEnter{
+
+to{
+transform:translateX(0);
+}
+
+}
+
+
+
+
+.talking{
+
+display:none;
+
+}
+
+
+
+
+
+/* DIALOGUE */
+
+
+.dialogue{
+
+position:absolute;
+
+z-index:50;
+
+width:260px;
+
+padding:14px;
+
+background:
+
+rgba(255,255,255,.85);
+
+border:
+
+2px solid #ff00ff;
+
+
+border-radius:15px;
+
+
+color:white;
+
+
+font-size:14px;
+
+
+text-align:center;
+
+
+text-shadow:
+0 2px 5px black;
+
+
+}
+
+
+
+.boss-text{
+
+right:12%;
+
+bottom:70%;
+
+}
+
+
+.avatar-text{
+
+left:12%;
+
+bottom:70%;
+
+}
+
+
+
+#flash{
+
+position:absolute;
+
+inset:0;
+
+background:white;
+
+opacity:0;
+
+z-index:100;
+
+transition:opacity 1s;
+
+pointer-events:none;
+
+}
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div id="flash"></div>
+
+
+
+<!-- EXTERIOR -->
+
+<div class="scene show" id="exterior">
+
+
+<img src="hotel-exterior.png" class="fullscreen">
+
+
+
+<div class="title-screen">
+
+
+<button onclick="startGame()">
+
+Enter Hotel
+
+</button>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+<!-- VIDEO -->
+
+
+<div class="scene" id="videoScene">
+
+
+<video id="hotelVideo" playsinline muted preload="auto">
+
+
+<source src="hotel-intro.mp4" type="video/mp4">
+
+
+</video>
+
+
+</div>
+
+
+
+
+
+
+<!-- LOBBY -->
+
+
+<div class="scene" id="lobby">
+
+
+<img src="hotel-lobby.png" class="fullscreen">
+
+
+
+
+
+<!-- AVATAR -->
+
+
+<div class="character-container avatar-position">
+
+
+<img
+src="avatar.png"
+id="avatarIdle"
+class="character">
+
+
+<video
+id="avatarTalking"
+class="character talking"
+muted
+playsinline
+preload="auto">
+
+
+<source src="avatar-talking.mp4">
+
+
+</video>
+
+
+</div>
+
+
+
+
+
+
+
+<!-- BOSS -->
+
+
+<div class="character-container boss-position">
+
+
+<img
+src="boss.png"
+id="bossIdle"
+class="character">
+
+
+<img
+id="bossTalking"
+src="boss-talking.gif"
+class="character talking">
+
+
+</div>
+
+
+
+
+
+
+
+<div class="dialogue boss-text">
+
+<b>MANAGER</b>
+
+<br><br>
+
+"Welcome to The Dollhouse Hotel. This place has lost its sparkle. I need someone who can restore it."
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<script>
+
+
+function showScene(hide,show){
+
+
+document
+.getElementById(hide)
+.classList.remove("show");
+
+
+document
+.getElementById(show)
+.classList.add("show");
+
+
+}
+
+
+
+
+
+
+
+// START BUTTON
+
+
+function startGame(){
+
+
+document.querySelector(".title-screen")
+.style.display="none";
+
+
+// unlock speech
+
+let unlock =
+new SpeechSynthesisUtterance("");
+
+unlock.volume=0;
+
+speechSynthesis.speak(unlock);
+
+
+
+// play video
+
+
+showScene(
+"exterior",
+"videoScene"
+);
+
+
+
+let video =
+document.getElementById("hotelVideo");
+
+
+function playWhenReady(v){
+if(v.readyState>=3){
+v.play();
+}else{
+v.addEventListener(
+"canplaythrough",
+function handler(){
+v.removeEventListener("canplaythrough",handler);
+v.play();
+},
+{once:true}
+);
+v.load();
+}
+}
+
+playWhenReady(video);
+
+
+
+}
+
+
+
+
+
+
+
+
+// VIDEO END
+
+
+document
+.getElementById("hotelVideo")
+.onended=function(){
+
+
+transitionToLobby();
+
+
+};
+
+
+
+
+
+
+
+function transitionToLobby(){
+
+
+let flash=
+document.getElementById("flash");
+
+
+
+flash.style.opacity=1;
+
+
+
+setTimeout(()=>{
+
+
+showScene(
+"videoScene",
+"lobby"
+);
+
+
+
+flash.style.opacity=0;
+
+
+
+setTimeout(()=>{
+
+bossTalk();
+
+},1500);
+
+
+
+},900);
+
+
+
+}
+
+
+
+
+
+
+
+
+// TALKING VIDEO
+
+
+function playTalking(talkingID,idleID){
+
+
+let idle =
+document.getElementById(idleID);
+
+
+let talking =
+document.getElementById(talkingID);
+
+
+
+idle.style.display="none";
+
+
+talking.style.display="block";
+
+
+
+if(talking.tagName==="VIDEO"){
+
+talking.muted=true;
+
+talking.volume=0;
+
+talking.currentTime=0;
+
+if(talking.readyState>=3){
+
+talking.play();
+
+}else{
+
+talking.addEventListener(
+"canplaythrough",
+function handler(){
+talking.removeEventListener("canplaythrough",handler);
+talking.play();
+},
+{once:true}
+);
+
+talking.load();
+
+}
+
+}
+
+
+}
+
+
+
+
+
+function stopTalking(){
+
+
+[
+"bossTalking",
+"avatarTalking"
+
+].forEach(id=>{
+
+
+let el =
+document.getElementById(id);
+
+
+if(el.tagName==="VIDEO"){
+
+el.pause();
+
+el.currentTime=0;
+
+}
+
+
+el.style.display="none";
+
+
+});
+
+
+
+[
+"bossIdle",
+"avatarIdle"
+
+].forEach(id=>{
+
+
+document
+.getElementById(id)
+.style.display="block";
+
+
+});
+
+
+}
+
+
+
+
+
+
+
+function bossTalk(){
+
+
+playTalking(
+"bossTalking",
+"bossIdle"
+);
+
+
+
+speak(
+
+"Welcome to The Dollhouse Hotel. This place has lost its sparkle. I need someone who can restore it.",
+
+"boss"
+
+);
+
+
+}
+
+
+
+
+
+
+function avatarTalk(){
+
+
+playTalking(
+"avatarTalking",
+"avatarIdle"
+);
+
+
+
+speak(
+
+"I am ready for my first assignment.",
+
+"avatar"
+
+);
+
+
+}
+
+
+
+
+
+
+
+// TTS
+
+
+let voices=[];
+
+
+function loadVoices(){
+
+voices =
+speechSynthesis.getVoices();
+
+}
+
+
+
+loadVoices();
+
+
+speechSynthesis.onvoiceschanged=
+loadVoices;
+
+
+
+
+
+
+
+function getVoice(type){
+
+
+let english=
+voices.filter(v=>
+v.lang.toLowerCase().includes("en")
+);
+
+
+if(type==="avatar"){
+// Google UK English Female (en-GB)
+let gb=english.filter(v=>
+v.lang==="en-GB"||v.lang.startsWith("en-GB")
+);
+return gb.find(v=>
+v.name.toLowerCase().includes("google uk english female")
+)
+||gb.find(v=>
+v.name.toLowerCase().includes("female")
+)
+||gb[0]
+||english[0];
+}
+
+
+if(type==="boss"){
+// Samantha (en-US)
+let us=english.filter(v=>v.lang==="en-US");
+return us.find(v=>
+v.name.toLowerCase().includes("samantha")
+)
+||us.find(v=>
+v.name.toLowerCase().includes("female")
+)
+||us[0]
+||english[0];
+}
+
+
+}
+
+
+
+
+
+
+
+function speak(text,type){
+
+speechSynthesis.cancel();
+
+function doSpeak(){
+
+let speech=
+new SpeechSynthesisUtterance(text);
+
+// refresh voices in case they loaded late
+if(voices.length===0){
+voices=speechSynthesis.getVoices();
+}
+
+let voice=getVoice(type);
+
+if(voice) speech.voice=voice;
+
+if(type==="avatar"){
+speech.pitch=1.6;
+speech.rate=1.05;
+}
+
+if(type==="boss"){
+speech.pitch=1;
+speech.rate=.85;
+}
+
+speech.volume=1;
+
+speech.onend=function(){
+stopTalking();
+};
+
+// Chrome needs a small gap after cancel() before the next speak()
+setTimeout(function(){
+speechSynthesis.speak(speech);
+},150);
+
+}
+
+// Wait for voices if they haven't loaded yet
+if(voices.length>0){
+
+doSpeak();
+
+}else{
+
+let attempts=0;
+
+let poll=setInterval(function(){
+
+voices=speechSynthesis.getVoices();
+
+attempts++;
+
+if(voices.length>0||attempts>30){
+
+clearInterval(poll);
+
+doSpeak();
+
+}
+
+},100);
+
+}
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>
