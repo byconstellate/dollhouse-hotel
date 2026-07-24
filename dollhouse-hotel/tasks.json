@@ -3,7 +3,7 @@
   {"id":"LOBBY002","name":"Vacuum carpet","room":"Reception & Lobby","category":"Cleaning","type":"Task","difficulty":2,"estimatedTime":15,"requiredItems":["Vacuum cleaner"],"completed":false,"selected":false},
   {"id":"LOBBY003","name":"Dust reception desk","room":"Reception & Lobby","category":"Cleaning","type":"Task","difficulty":1,"estimatedTime":5,"requiredItems":["Microfibre cloths","Furniture polish"],"completed":false,"selected":false},
   {"id":"LOBBY004","name":"Wipe reception desk","room":"Reception & Lobby","category":"Cleaning","type":"Task","difficulty":1,"estimatedTime":5,"requiredItems":["Multi-surface cleaner","Microfibre cloths"],"completed":false,"selected":false},
-  {"id":"LOBBY005","name":"Polish reception bell","room":"Reception & Lobby","category":"Cleaning","type":"Task","difficulty":1,"estimatedTime":3,"requiredItems":["Stainless steel cleaner","White polishing cloths"],"completed":false,"selected":false},
+
   {"id":"LOBBY006","name":"Organise brochures","room":"Reception & Lobby","category":"Administration","type":"Task","difficulty":1,"estimatedTime":5,"requiredItems":[],"completed":false,"selected":false},
   {"id":"LOBBY007","name":"Arrange flowers","room":"Reception & Lobby","category":"Room Styling","type":"Task","difficulty":1,"estimatedTime":10,"requiredItems":["Pink fresh roses","Small vase"],"completed":false,"selected":false},
   {"id":"LOBBY008","name":"Water plants","room":"Reception & Lobby","category":"Cleaning","type":"Task","difficulty":1,"estimatedTime":5,"requiredItems":[],"completed":false,"selected":false},

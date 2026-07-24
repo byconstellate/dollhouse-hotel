@@ -337,6 +337,10 @@ letter-spacing:1px;
 .btn-accept:hover{ background:rgba(136,255,204,0.1); }
 .btn-refuse{ border-color:#ff6688; color:#ff6688; }
 .btn-refuse:hover{ background:rgba(255,102,136,0.1); }
+.btn-later{ border-color:#ffcc44; color:#ffcc44; font-size:13px; padding:10px 22px; }
+.btn-later:hover{ background:rgba(255,204,68,0.1); }
+.btn-skip{ border-color:#ff6688; color:#ff6688; font-size:13px; padding:10px 22px; }
+.btn-skip:hover{ background:rgba(255,102,136,0.1); }
 
 .confirm-list{
 margin:10px 0;
@@ -523,6 +527,8 @@ margin-bottom:14px;
   <div class="task-items" id="taskItems"></div>
   <div class="panel-footer">
     <button onclick="markTaskDone()">✓ Mark as Done</button>
+    <button class="btn-later" onclick="doItLater()">⏱ Do it Later</button>
+    <button class="btn-skip" onclick="notToday()">✗ Not Today</button>
   </div>
 </div>
 
@@ -834,7 +840,7 @@ function speak(text, type, onDone){
     let voice  = getVoice(type);
     if(voice) speech.voice = voice;
     if(type==="avatar"){ speech.pitch=1.6; speech.rate=1.05; }
-    if(type==="boss")  { speech.pitch=1;   speech.rate=0.85; }
+    if(type==="boss")  { speech.pitch=1.55; speech.rate=0.85; }
     speech.volume = 1;
     speech.onend = function(){ stopTalking(); if(onDone) onDone(); };
     setTimeout(()=>speechSynthesis.speak(speech), 150);
@@ -1233,6 +1239,78 @@ function markTaskDone(){
   });
 }
 
+
+// ═══════════════════════════════════════════════════
+//  DEFER / SKIP TASK
+// ═══════════════════════════════════════════════════
+function doItLater(){
+  showPanel(null);
+  let task = incompleteTasks[currentTaskIndex];
+  // Move task to end of the queue
+  incompleteTasks.splice(currentTaskIndex, 1);
+  incompleteTasks.push(task);
+  // Small trust penalty
+  addTrust(-2);
+  let lines = [
+    "I'll come back to that one.",
+    "I'll get to it later.",
+    "I'll circle back to that.",
+    "Later — I'll finish it before the end of shift."
+  ];
+  let line = lines[currentTaskIndex % lines.length];
+  setAvatarDialogue("\u201c" + line + "\u201d");
+  document.getElementById("avatarDialogue").style.display = "block";
+  playTalking("avatarTalking","avatarIdle");
+  speak(line,"avatar",()=>{
+    hideAvatarDialogue();
+    // Stay at same index (next task slid into place), but cap at list length
+    if(currentTaskIndex >= incompleteTasks.length) currentTaskIndex = 0;
+    showTaskCard(currentTaskIndex);
+  });
+}
+
+function notToday(){
+  showPanel(null);
+  let task = incompleteTasks[currentTaskIndex];
+  // Remove the task entirely — not getting done
+  incompleteTasks.splice(currentTaskIndex, 1);
+  // Bigger trust penalty — required tasks hurt more
+  let penalty = task.required ? 8 : 5;
+  addTrust(-penalty);
+  let lines = [
+    "I'm not doing that today.",
+    "Not today — I'll skip it.",
+    "That one can wait.",
+    "I'm leaving that for now."
+  ];
+  let line = lines[currentTaskIndex % lines.length];
+  setAvatarDialogue("\u201c" + line + "\u201d");
+  document.getElementById("avatarDialogue").style.display = "block";
+  playTalking("avatarTalking","avatarIdle");
+  speak(line,"avatar",()=>{
+    hideAvatarDialogue();
+    // Boss reacts with disappointment
+    let bossLines = [
+      "That task needed to be done. I'm very disappointed.",
+      "Skipping tasks is not how we operate here. Trust takes time to rebuild.",
+      "That reflects badly on your commitment. I'll be noting this.",
+      "I expected better than that. Our guests deserve more effort."
+    ];
+    let bossLine = bossLines[Math.floor(Math.random() * bossLines.length)];
+    setBossDialogue("\u201c" + bossLine + "\u201d");
+    document.getElementById("bossDialogue").style.display = "block";
+    playTalking("bossTalking","bossIdle");
+    speak(bossLine,"boss",()=>{
+      hideBossDialogue();
+      if(incompleteTasks.length === 0 || currentTaskIndex >= incompleteTasks.length){
+        if(incompleteTasks.length === 0) allTasksDone();
+        else showTaskCard(currentTaskIndex);
+      } else {
+        showTaskCard(currentTaskIndex);
+      }
+    });
+  });
+}
 
 // ═══════════════════════════════════════════════════
 //  STAGE 6 — SHIFT COMPLETE
