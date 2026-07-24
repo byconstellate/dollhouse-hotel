@@ -330,7 +330,7 @@ Enter Hotel
 <div class="scene" id="videoScene">
 
 
-<video id="hotelVideo" playsinline muted>
+<video id="hotelVideo" playsinline muted preload="auto">
 
 
 <source src="hotel-intro.mp4" type="video/mp4">
@@ -499,7 +499,23 @@ let video =
 document.getElementById("hotelVideo");
 
 
-video.play();
+function playWhenReady(v){
+if(v.readyState>=3){
+v.play();
+}else{
+v.addEventListener(
+"canplaythrough",
+function handler(){
+v.removeEventListener("canplaythrough",handler);
+v.play();
+},
+{once:true}
+);
+v.load();
+}
+}
+
+playWhenReady(video);
 
 
 
@@ -608,7 +624,24 @@ talking.volume=0;
 
 talking.currentTime=0;
 
+if(talking.readyState>=3){
+
 talking.play();
+
+}else{
+
+talking.addEventListener(
+"canplaythrough",
+function handler(){
+talking.removeEventListener("canplaythrough",handler);
+talking.play();
+},
+{once:true}
+);
+
+talking.load();
+
+}
 
 }
 
