@@ -106,18 +106,5 @@
   {"id":"LAUND001","name":"Sort washing","room":"Laundry Room","category":"Bedding & Linen","type":"Task","difficulty":1,"estimatedTime":10,"requiredItems":["Dirty linen bags"],"completed":false,"selected":false},
   {"id":"LAUND002","name":"Wash whites","room":"Laundry Room","category":"Bedding & Linen","type":"Task","difficulty":2,"estimatedTime":60,"requiredItems":["Bleach"],"completed":false,"selected":false},
   {"id":"LAUND003","name":"Fold clothes","room":"Laundry Room","category":"Bedding & Linen","type":"Task","difficulty":1,"estimatedTime":15,"requiredItems":[],"completed":false,"selected":false},
-  {"id":"LAUND004","name":"Iron clothes","room":"Laundry Room","category":"Bedding & Linen","type":"Task","difficulty":2,"estimatedTime":30,"requiredItems":[],"completed":false,"selected":false},
-
-  {"id":"LUX001","name":"Place welcome chocolates","room":"Bedroom","category":"Dollhouse Hotel Extras","type":"Luxury","difficulty":1,"estimatedTime":3,"requiredItems":["Luxury chocolates wrapped in hot pink foil"],"completed":false,"selected":false},
-  {"id":"LUX002","name":"Fold towel swans","room":"Bathroom","category":"Dollhouse Hotel Extras","type":"Luxury","difficulty":3,"estimatedTime":15,"requiredItems":["Bath towels"],"completed":false,"selected":false},
-  {"id":"LUX003","name":"Leave welcome note","room":"Bedroom","category":"Dollhouse Hotel Extras","type":"Luxury","difficulty":1,"estimatedTime":3,"requiredItems":["Welcome card","Pink clipboard"],"completed":false,"selected":false},
-  {"id":"LUX004","name":"Place slippers beside bed","room":"Bedroom","category":"Dollhouse Hotel Extras","type":"Luxury","difficulty":1,"estimatedTime":2,"requiredItems":["Branded slippers"],"completed":false,"selected":false},
-  {"id":"LUX005","name":"Fold bathrobe","room":"Bathroom","category":"Dollhouse Hotel Extras","type":"Luxury","difficulty":1,"estimatedTime":3,"requiredItems":["Branded bathrobe"],"completed":false,"selected":false},
-  {"id":"LUX006","name":"Restock minibar","room":"Living Room","category":"Dollhouse Hotel Extras","type":"Luxury","difficulty":1,"estimatedTime":8,"requiredItems":["Champagne","Wine","Chocolates","Bottled water"],"completed":false,"selected":false},
-  {"id":"LUX007","name":"Arrange fresh pink roses","room":"Bedroom","category":"Dollhouse Hotel Extras","type":"Luxury","difficulty":1,"estimatedTime":10,"requiredItems":["Pink fresh roses","Small vase"],"completed":false,"selected":false},
-  {"id":"LUX008","name":"Light signature candle","room":"Bedroom","category":"Dollhouse Hotel Extras","type":"Luxury","difficulty":1,"estimatedTime":2,"requiredItems":["Signature candle Midnight Roses"],"completed":false,"selected":false},
-  {"id":"LUX009","name":"Place tiny plush teddy","room":"Bedroom","category":"Dollhouse Hotel Extras","type":"Luxury","difficulty":1,"estimatedTime":2,"requiredItems":["Tiny plush teddy"],"completed":false,"selected":false},
-  {"id":"LUX010","name":"Photograph completed room","room":"Bedroom","category":"Dollhouse Hotel Extras","type":"Luxury","difficulty":1,"estimatedTime":5,"requiredItems":["Pink iPad"],"completed":false,"selected":false},
-  {"id":"LUX011","name":"Mark room as Ready","room":"General","category":"Dollhouse Hotel Extras","type":"Luxury","difficulty":1,"estimatedTime":2,"requiredItems":["Pink iPad"],"completed":false,"selected":false},
-  {"id":"LUX012","name":"Inspect room quality","room":"General","category":"Dollhouse Hotel Extras","type":"Luxury","difficulty":1,"estimatedTime":10,"requiredItems":["Room checklist","Pink iPad"],"completed":false,"selected":false}
+  {"id":"LAUND004","name":"Iron clothes","room":"Laundry Room","category":"Bedding & Linen","type":"Task","difficulty":2,"estimatedTime":30,"requiredItems":[],"completed":false,"selected":false}
 ]

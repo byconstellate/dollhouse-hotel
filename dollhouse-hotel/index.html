@@ -297,6 +297,8 @@ transition:background 0.15s;
 .item-row input[type="checkbox"]{ accent-color:#ff00ff; width:15px; height:15px; flex-shrink:0; cursor:pointer; }
 .item-row.is-missing{ color:#ff6688; text-decoration:line-through; }
 .req-tag{ margin-left:auto; font-size:9px; color:#ff4466; letter-spacing:1px; flex-shrink:0; }
+.still-missing-tag{ margin-left:auto; font-size:9px; color:#ffaa00; letter-spacing:1px; flex-shrink:0; animation:pulse-warn 1.4s ease-in-out infinite; }
+@keyframes pulse-warn{ 0%,100%{ opacity:1; } 50%{ opacity:0.45; } }
 
 .panel-footer{
 padding-top:14px;
@@ -468,7 +470,7 @@ margin-bottom:14px;
 <!-- ═══════ PANEL: INVENTORY ═══════ -->
 <div class="panel" id="inventoryPanel">
   <div class="panel-title">✦ CLEANING SUPPLIES INVENTORY ✦</div>
-  <div class="panel-sub">Mark off any supplies you do NOT have today.<br>Required items are flagged in red.</div>
+  <div class="panel-sub" id="inventoryPanelSub">Mark off any supplies you do NOT have today.<br>Required items are flagged in red.</div>
   <div class="scroll-area" id="inventoryList"></div>
   <div class="panel-footer">
     <button onclick="inventoryDone()">Done →</button>
@@ -654,6 +656,23 @@ let earnings = 0;    // £
 
 let prevMoodTier = "neutral"; // track for threshold alerts
 let dialogueIndices = { happy:0, neutral:0, angry:0 }; // rotating pointers
+
+// ═══════════════════════════════════════════════════
+//  PERSISTENT INVENTORY (localStorage)
+// ═══════════════════════════════════════════════════
+const STORAGE_KEY = "dollhouse_missing_items";
+
+function loadSavedMissingIds(){
+  try {
+    let raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(e){ return []; }
+}
+
+function saveMissingIds(ids){
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ids)); }
+  catch(e){}
+}
 
 // Preload JSON
 Promise.all([
@@ -924,6 +943,17 @@ function openInventoryPanel(){
 }
 
 function buildInventoryList(){
+  let savedMissingIds = loadSavedMissingIds();
+  let isReturning = savedMissingIds.length > 0;
+
+  // Update subtitle depending on whether this is a returning player
+  let sub = document.getElementById("inventoryPanelSub");
+  if(isReturning){
+    sub.innerHTML = `Items you were <span style="color:#ff6688">still missing</span> last time are pre-ticked.<br>Tick anything else you don't have today. Required items flagged in red.`;
+  } else {
+    sub.innerHTML = `Mark off any supplies you do NOT have today.<br>Required items are flagged in red.`;
+  }
+
   let container=document.getElementById("inventoryList");
   container.innerHTML="";
   let cats={};
@@ -936,9 +966,16 @@ function buildInventoryList(){
     h.className="cat-title"; h.textContent=cat.toUpperCase();
     container.appendChild(h);
     items.forEach(item=>{
+      let wasMissing = savedMissingIds.includes(item.id);
       let row=document.createElement("label");
-      row.className="item-row";
-      row.innerHTML=`<input type="checkbox" id="inv-${item.id}" data-id="${item.id}"><span>${item.name}</span>${item.required?'<span class="req-tag">REQUIRED</span>':''}`;
+      row.className="item-row" + (wasMissing ? " is-missing" : "");
+
+      let warningTag = wasMissing
+        ? `<span class="still-missing-tag">⚠ STILL MISSING?</span>`
+        : "";
+      let reqTag = item.required ? `<span class="req-tag">REQUIRED</span>` : "";
+
+      row.innerHTML=`<input type="checkbox" id="inv-${item.id}" data-id="${item.id}" ${wasMissing?"checked":""}><span>${item.name}</span>${warningTag}${reqTag}`;
       row.querySelector("input").addEventListener("change",function(){
         row.classList.toggle("is-missing",this.checked);
       });
@@ -948,17 +985,36 @@ function buildInventoryList(){
 }
 
 function inventoryDone(){
+  let savedMissingIds = loadSavedMissingIds();
   missingItems=[];
   document.querySelectorAll("#inventoryList input:checked").forEach(cb=>{
     let found=inventoryData.find(i=>i.id===cb.dataset.id);
     if(found) missingItems.push(found);
   });
-  // Trust penalty for many missing required items
-  let missingRequired=missingItems.filter(i=>i.required).length;
-  if(missingRequired>0) addTrust(-Math.min(missingRequired*2, 10));
+
+  let currentMissingIds = missingItems.map(i=>i.id);
+
+  // Items that were missing before AND are still missing now → repeat penalty
+  let stillMissingRequired = missingItems.filter(i=>i.required && savedMissingIds.includes(i.id));
+  let newMissingRequired   = missingItems.filter(i=>i.required && !savedMissingIds.includes(i.id));
+
+  // Repeat offence: -4 per item (up to -20), new missing: -2 per item (up to -10)
+  if(stillMissingRequired.length > 0) addTrust(-Math.min(stillMissingRequired.length * 4, 20));
+  if(newMissingRequired.length    > 0) addTrust(-Math.min(newMissingRequired.length   * 2, 10));
+
+  // Save this session's missing ids for next time
+  saveMissingIds(currentMissingIds);
+
   showPanel(null);
-  if(missingItems.length>0) bossOrderPrompt();
-  else bossNoMissingItems();
+
+  // If some required items are repeat offenders, boss calls it out
+  if(stillMissingRequired.length > 0){
+    bossRepeatMissingPrompt(stillMissingRequired, missingItems);
+  } else if(missingItems.length > 0){
+    bossOrderPrompt();
+  } else {
+    bossNoMissingItems();
+  }
 }
 
 
@@ -966,11 +1022,40 @@ function inventoryDone(){
 //  STAGE 3 — ORDER DECISION
 // ═══════════════════════════════════════════════════
 function bossNoMissingItems(){
-  let line="Wonderful — you have everything you need. Let's get to work!";
+  let hadMissing = loadSavedMissingIds().length > 0;
+  // If they had missing items last time but fixed them all — extra praise
+  let line = hadMissing
+    ? "I see you've sorted everything out since last time. Well done — that's exactly the kind of initiative I expect. Let's get to work!"
+    : "Wonderful — you have everything you need. Let's get to work!";
   setBossDialogue("\u201c"+line+"\u201d");
   document.getElementById("bossDialogue").style.display="block";
   playTalking("bossTalking","bossIdle");
-  speak(line,"boss",()=>{ addTrust(3); setTimeout(()=>bossTasksPrompt(), 800); });
+  speak(line,"boss",()=>{ addTrust(hadMissing ? 6 : 3); setTimeout(()=>bossTasksPrompt(), 800); });
+}
+
+function bossRepeatMissingPrompt(stillMissing, allMissing){
+  let names = stillMissing.map(i=>i.name).slice(0,3).join(", ")+(stillMissing.length>3?" and more":"");
+  let repeatLines = [
+    `I specifically told you last time about ${names}. You're still showing up without ${stillMissing.length>1?"them":"it"}. That is not acceptable.`,
+    `We spoke about ${names} last shift. You still haven't sorted ${stillMissing.length>1?"them":"it"} out. This is costing us.`,
+    `${names} — again missing. I shouldn't have to repeat myself. This reflects very poorly on you.`,
+    `You were warned about ${names} last time. Still not here. Every time this happens, it lets the whole hotel down.`
+  ];
+  let line = repeatLines[Math.floor(Math.random()*repeatLines.length)];
+  setBossDialogue("\u201c"+line+"\u201d");
+  document.getElementById("bossDialogue").style.display="block";
+  playTalking("bossTalking","bossIdle");
+  speak(line,"boss",()=>{
+    let n=allMissing.length;
+    let orderLine=`You are missing ${n} item${n>1?"s":""}. Would you like to order ${n>1?"them":"it"} for delivery now?`;
+    document.getElementById("orderBody").textContent=orderLine;
+    document.getElementById("missingListEl").innerHTML=allMissing.map(i=>{
+      let wasRepeat = stillMissing.find(s=>s.id===i.id);
+      return `${wasRepeat?"⚠ ":"• "}${i.name}${wasRepeat?" <span style='color:#ffaa00;font-size:10px'>(repeat)</span>":""}`;
+    }).join("<br>");
+    hideBossDialogue();
+    showPanel("orderPanel");
+  });
 }
 
 function bossOrderPrompt(){
