@@ -834,63 +834,71 @@ v.name.toLowerCase().includes("female")
 
 function speak(text,type){
 
-
-
 speechSynthesis.cancel();
 
+function doSpeak(){
 
-
-let speech =
+let speech=
 new SpeechSynthesisUtterance(text);
 
-
-
-let voice =
-getVoice(type);
-
-
-
-if(voice){
-
-speech.voice=voice;
-
+// refresh voices in case they loaded late
+if(voices.length===0){
+voices=speechSynthesis.getVoices();
 }
 
+let voice=getVoice(type);
 
+if(voice) speech.voice=voice;
 
 if(type==="avatar"){
-
 speech.pitch=1.6;
-
 speech.rate=1.05;
-
 }
-
 
 if(type==="boss"){
-
 speech.pitch=1;
-
 speech.rate=.85;
-
 }
-
-
 
 speech.volume=1;
 
-
-
 speech.onend=function(){
-
 stopTalking();
-
 };
 
-
-
+// Chrome needs a small gap after cancel() before the next speak()
+setTimeout(function(){
 speechSynthesis.speak(speech);
+},150);
 
+}
+
+// Wait for voices if they haven't loaded yet
+if(voices.length>0){
+
+doSpeak();
+
+}else{
+
+let attempts=0;
+
+let poll=setInterval(function(){
+
+voices=speechSynthesis.getVoices();
+
+attempts++;
+
+if(voices.length>0||attempts>30){
+
+clearInterval(poll);
+
+doSpeak();
+
+}
+
+},100);
+
+}
 
 }
 
