@@ -45,7 +45,6 @@ left:50%;
 transform:translateX(-50%);
 text-align:center;
 color:white;
-text-shadow:0 3px 10px black;
 }
 
 button{
@@ -57,11 +56,9 @@ color:white;
 font-family:"Courier New",monospace;
 font-size:18px;
 cursor:pointer;
-transition:background 0.2s,color 0.2s;
+transition:background 0.2s;
 }
-button:hover{
-background:rgba(255,0,255,0.15);
-}
+button:hover{ background:rgba(255,0,255,0.15); }
 
 /* CHARACTERS */
 .character-container{
@@ -70,10 +67,7 @@ bottom:0;
 height:78%;
 z-index:20;
 }
-.character{
-height:100%;
-object-fit:contain;
-}
+.character{ height:100%; object-fit:contain; }
 .boss-position{
 right:8%;
 transform:translateX(500px);
@@ -94,20 +88,15 @@ position:absolute;
 z-index:50;
 width:240px;
 padding:14px;
-background:rgba(8,0,12,0.88);
+background:rgba(8,0,12,0.90);
 border:2px solid #ff00ff;
 border-radius:15px;
 color:white;
 font-size:13px;
 text-align:center;
-text-shadow:0 2px 5px black;
 line-height:1.5;
-transition:opacity 0.4s;
 }
-.dialogue b{
-color:#ff88ff;
-letter-spacing:1px;
-}
+.dialogue b{ color:#ff88ff; letter-spacing:1px; }
 .boss-text{ right:12%; bottom:72%; }
 .avatar-text{ left:12%; bottom:72%; }
 
@@ -122,7 +111,118 @@ transition:opacity 1s;
 pointer-events:none;
 }
 
-/* =================== PANELS =================== */
+/* ═══════════════════ HUD ═══════════════════ */
+#hud{
+position:absolute;
+top:14px;
+right:16px;
+z-index:300;
+display:none;
+flex-direction:column;
+align-items:flex-end;
+gap:6px;
+}
+.hud-mood{
+font-size:12px;
+letter-spacing:2px;
+padding:5px 12px;
+border-radius:20px;
+border:1px solid;
+font-weight:bold;
+transition:all 0.6s ease;
+}
+.hud-mood.happy{  color:#ffaaff; border-color:#ff88ff; background:rgba(255,0,255,0.12); }
+.hud-mood.neutral{ color:#cccccc; border-color:#888888; background:rgba(255,255,255,0.08); }
+.hud-mood.strict{  color:#ff6688; border-color:#ff4466; background:rgba(255,0,40,0.12); }
+
+.hud-trust{
+display:flex;
+align-items:center;
+gap:7px;
+}
+.trust-label{
+font-size:10px;
+color:#aaaaaa;
+letter-spacing:1px;
+}
+.trust-track{
+width:90px;
+height:6px;
+background:rgba(255,255,255,0.1);
+border-radius:3px;
+overflow:hidden;
+}
+.trust-fill{
+height:100%;
+border-radius:3px;
+transition:width 0.8s ease, background 0.8s ease;
+}
+.trust-num{
+font-size:10px;
+color:#ffffff;
+width:22px;
+text-align:right;
+}
+
+.hud-earnings{
+font-size:13px;
+color:#88ffcc;
+letter-spacing:1px;
+}
+
+/* ═══════════════════ TASK REWARD NOTIFICATION ═══════════════════ */
+#rewardNotif{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+z-index:400;
+background:rgba(8,0,12,0.93);
+border:2px solid #88ffcc;
+border-radius:14px;
+padding:18px 32px;
+text-align:center;
+opacity:0;
+pointer-events:none;
+transition:opacity 0.3s;
+}
+#rewardNotif.show{ opacity:1; }
+.reward-money{
+font-size:28px;
+color:#88ffcc;
+font-weight:bold;
+letter-spacing:2px;
+}
+.reward-trust{
+font-size:13px;
+color:#ff88ff;
+margin-top:4px;
+letter-spacing:1px;
+}
+
+/* ═══════════════════ MOOD SHIFT BANNER ═══════════════════ */
+#moodBanner{
+position:absolute;
+top:60px;
+left:50%;
+transform:translateX(-50%);
+z-index:350;
+background:rgba(8,0,12,0.93);
+border:2px solid #ff00ff;
+border-radius:12px;
+padding:10px 24px;
+font-size:13px;
+color:#ffaaff;
+letter-spacing:1px;
+text-align:center;
+opacity:0;
+pointer-events:none;
+transition:opacity 0.4s;
+white-space:nowrap;
+}
+#moodBanner.show{ opacity:1; }
+
+/* ═══════════════════ PANELS ═══════════════════ */
 .panel{
 position:absolute;
 z-index:200;
@@ -134,11 +234,10 @@ font-family:"Courier New",monospace;
 padding:22px;
 display:none;
 flex-direction:column;
-box-shadow:0 0 50px rgba(255,0,255,0.25);
+box-shadow:0 0 50px rgba(255,0,255,0.2);
 }
 .panel.active{ display:flex; }
 
-/* Full-height panels */
 #inventoryPanel,#tasksPanel{
 top:5%;
 left:50%;
@@ -146,8 +245,6 @@ transform:translateX(-50%);
 width:min(88%,740px);
 height:82%;
 }
-
-/* Centred modal panels */
 #orderPanel,#orderConfirmPanel,#taskCardPanel{
 top:50%;
 left:50%;
@@ -170,18 +267,13 @@ text-align:center;
 margin-bottom:14px;
 line-height:1.5;
 }
-
-/* Scrollable list inside panels */
 .scroll-area{
 flex:1;
 overflow-y:auto;
 padding-right:6px;
 }
 .scroll-area::-webkit-scrollbar{ width:5px; }
-.scroll-area::-webkit-scrollbar-thumb{
-background:rgba(255,0,255,0.35);
-border-radius:3px;
-}
+.scroll-area::-webkit-scrollbar-thumb{ background:rgba(255,0,255,0.3); border-radius:3px; }
 
 .cat-title{
 color:#ff00ff;
@@ -189,9 +281,8 @@ font-size:11px;
 letter-spacing:2px;
 margin:16px 0 5px;
 padding-bottom:4px;
-border-bottom:1px solid rgba(255,0,255,0.25);
+border-bottom:1px solid rgba(255,0,255,0.2);
 }
-
 .item-row{
 display:flex;
 align-items:center;
@@ -202,25 +293,10 @@ cursor:pointer;
 border-radius:6px;
 transition:background 0.15s;
 }
-.item-row:hover{ background:rgba(255,0,255,0.08); }
-.item-row input[type="checkbox"]{
-accent-color:#ff00ff;
-width:15px;
-height:15px;
-flex-shrink:0;
-cursor:pointer;
-}
-.item-row.is-missing{
-color:#ff6688;
-text-decoration:line-through;
-}
-.req-tag{
-margin-left:auto;
-font-size:9px;
-color:#ff4466;
-letter-spacing:1px;
-flex-shrink:0;
-}
+.item-row:hover{ background:rgba(255,0,255,0.07); }
+.item-row input[type="checkbox"]{ accent-color:#ff00ff; width:15px; height:15px; flex-shrink:0; cursor:pointer; }
+.item-row.is-missing{ color:#ff6688; text-decoration:line-through; }
+.req-tag{ margin-left:auto; font-size:9px; color:#ff4466; letter-spacing:1px; flex-shrink:0; }
 
 .panel-footer{
 padding-top:14px;
@@ -230,15 +306,7 @@ gap:12px;
 justify-content:center;
 flex-wrap:wrap;
 }
-
-/* Order panel */
-.order-body{
-font-size:13px;
-text-align:center;
-line-height:1.7;
-margin-bottom:10px;
-color:#ffddff;
-}
+.order-body{ font-size:13px; text-align:center; line-height:1.7; margin-bottom:10px; color:#ffddff; }
 .missing-list{
 margin:10px 0;
 max-height:160px;
@@ -268,7 +336,6 @@ letter-spacing:1px;
 .btn-refuse{ border-color:#ff6688; color:#ff6688; }
 .btn-refuse:hover{ background:rgba(255,102,136,0.1); }
 
-/* Order confirm panel */
 .confirm-list{
 margin:10px 0;
 max-height:200px;
@@ -276,7 +343,6 @@ overflow-y:auto;
 font-size:12px;
 line-height:1.9;
 color:#88ffcc;
-text-align:left;
 padding:4px 8px;
 border:1px solid rgba(136,255,204,0.2);
 border-radius:8px;
@@ -284,39 +350,13 @@ border-radius:8px;
 .confirm-list::-webkit-scrollbar{ width:4px; }
 .confirm-list::-webkit-scrollbar-thumb{ background:rgba(136,255,204,0.3); border-radius:2px; }
 
-/* Task card panel */
-.task-progress{
-font-size:11px;
-color:#ff88ff;
-text-align:center;
-letter-spacing:1px;
-margin-bottom:10px;
-}
-.task-room-label{
-font-size:11px;
-color:#ff88ff;
-letter-spacing:2px;
-text-align:center;
-margin-bottom:6px;
-}
-.task-name{
-font-size:22px;
-font-weight:bold;
-text-align:center;
-color:white;
-margin-bottom:10px;
-line-height:1.3;
-}
-.task-items{
-font-size:11px;
-color:#ffaaff;
-text-align:center;
-margin-bottom:18px;
-line-height:1.7;
-min-height:20px;
-}
+/* Task card */
+.task-progress{ font-size:11px; color:#ff88ff; text-align:center; letter-spacing:1px; margin-bottom:10px; }
+.task-room-label{ font-size:11px; color:#ff88ff; letter-spacing:2px; text-align:center; margin-bottom:6px; }
+.task-name{ font-size:22px; font-weight:bold; text-align:center; color:white; margin-bottom:10px; line-height:1.3; }
+.task-items{ font-size:11px; color:#ffaaff; text-align:center; margin-bottom:18px; line-height:1.7; min-height:20px; }
 
-/* Tasks checklist */
+/* Task checklist */
 .task-item-row{
 display:flex;
 align-items:center;
@@ -327,27 +367,12 @@ cursor:pointer;
 border-radius:6px;
 transition:background 0.15s;
 }
-.task-item-row:hover{ background:rgba(255,0,255,0.08); }
-.task-item-row input[type="checkbox"]{
-accent-color:#00ff88;
-width:15px;
-height:15px;
-flex-shrink:0;
-cursor:pointer;
-}
-.task-item-row.is-done{
-color:#00cc66;
-text-decoration:line-through;
-}
-.task-room-tag{
-margin-left:auto;
-font-size:9px;
-color:#ff88ff;
-letter-spacing:1px;
-flex-shrink:0;
-}
+.task-item-row:hover{ background:rgba(255,0,255,0.07); }
+.task-item-row input[type="checkbox"]{ accent-color:#00ff88; width:15px; height:15px; flex-shrink:0; cursor:pointer; }
+.task-item-row.is-done{ color:#00cc66; text-decoration:line-through; }
+.task-room-tag{ margin-left:auto; font-size:9px; color:#ff88ff; letter-spacing:1px; flex-shrink:0; }
 
-/* All done screen */
+/* All done */
 #allDonePanel{
 top:50%;
 left:50%;
@@ -355,20 +380,19 @@ transform:translate(-50%,-50%);
 width:min(88%,480px);
 text-align:center;
 }
-.all-done-star{
-font-size:48px;
-margin-bottom:10px;
+.all-done-star{ font-size:40px; margin-bottom:8px; }
+.all-done-title{ color:#ff00ff; font-size:18px; letter-spacing:3px; margin-bottom:10px; }
+.all-done-body{ color:#ffddff; font-size:13px; line-height:1.7; }
+.all-done-total{
+font-size:24px;
+color:#88ffcc;
+margin:14px 0 4px;
+letter-spacing:2px;
 }
-.all-done-title{
-color:#ff00ff;
-font-size:18px;
-letter-spacing:3px;
-margin-bottom:10px;
-}
-.all-done-body{
-color:#ffddff;
-font-size:13px;
-line-height:1.7;
+.all-done-trust{
+font-size:12px;
+letter-spacing:1px;
+margin-bottom:14px;
 }
 
 </style>
@@ -378,7 +402,28 @@ line-height:1.7;
 
 <div id="flash"></div>
 
-<!-- EXTERIOR -->
+<!-- HUD (trust + earnings) -->
+<div id="hud">
+  <div class="hud-mood neutral" id="hudMood">😐 NEUTRAL</div>
+  <div class="hud-trust">
+    <span class="trust-label">TRUST</span>
+    <div class="trust-track"><div class="trust-fill" id="trustFill" style="width:50%;background:#888888"></div></div>
+    <span class="trust-num" id="trustNum">50</span>
+  </div>
+  <div class="hud-earnings" id="hudEarnings">💰 £0</div>
+</div>
+
+<!-- Reward notification -->
+<div id="rewardNotif">
+  <div class="reward-money" id="rewardMoney"></div>
+  <div class="reward-trust" id="rewardTrust"></div>
+</div>
+
+<!-- Mood shift banner -->
+<div id="moodBanner" id="moodBanner"></div>
+
+
+<!-- ─── EXTERIOR ──────────────────────────────── -->
 <div class="scene show" id="exterior">
   <img src="hotel-exterior.png" class="fullscreen">
   <div class="title-screen">
@@ -386,18 +431,17 @@ line-height:1.7;
   </div>
 </div>
 
-<!-- VIDEO -->
+<!-- ─── VIDEO ─────────────────────────────────── -->
 <div class="scene" id="videoScene">
   <video id="hotelVideo" playsinline muted preload="auto">
     <source src="hotel-intro.mp4" type="video/mp4">
   </video>
 </div>
 
-<!-- LOBBY -->
+<!-- ─── LOBBY ─────────────────────────────────── -->
 <div class="scene" id="lobby">
   <img src="hotel-lobby.png" class="fullscreen">
 
-  <!-- AVATAR -->
   <div class="character-container avatar-position">
     <img src="avatar.png" id="avatarIdle" class="character">
     <video id="avatarTalking" class="character talking" muted playsinline preload="auto">
@@ -405,18 +449,15 @@ line-height:1.7;
     </video>
   </div>
 
-  <!-- BOSS -->
   <div class="character-container boss-position">
     <img src="boss.png" id="bossIdle" class="character">
     <img id="bossTalking" src="boss-talking.gif" class="character talking">
   </div>
 
-  <!-- Dynamic dialogue box -->
-  <div class="dialogue boss-text" id="bossDialogue">
+  <div class="dialogue boss-text" id="bossDialogue" style="display:none">
     <b>MANAGER</b><br><br>
-    <span id="bossDialogueText">"Welcome to The Dollhouse Hotel. This place has lost its sparkle. I need someone who can restore it."</span>
+    <span id="bossDialogueText"></span>
   </div>
-
   <div class="dialogue avatar-text" id="avatarDialogue" style="display:none">
     <b>YOU</b><br><br>
     <span id="avatarDialogueText"></span>
@@ -424,22 +465,17 @@ line-height:1.7;
 </div>
 
 
-<!-- =========================================================
-     PANEL: INVENTORY CHECK
-     ========================================================= -->
+<!-- ═══════ PANEL: INVENTORY ═══════ -->
 <div class="panel" id="inventoryPanel">
   <div class="panel-title">✦ CLEANING SUPPLIES INVENTORY ✦</div>
-  <div class="panel-sub">Mark off any supplies you do NOT have today.<br>Leave items unchecked if you have them.</div>
+  <div class="panel-sub">Mark off any supplies you do NOT have today.<br>Required items are flagged in red.</div>
   <div class="scroll-area" id="inventoryList"></div>
   <div class="panel-footer">
     <button onclick="inventoryDone()">Done →</button>
   </div>
 </div>
 
-
-<!-- =========================================================
-     PANEL: ORDER DECISION
-     ========================================================= -->
+<!-- ═══════ PANEL: ORDER ═══════ -->
 <div class="panel" id="orderPanel">
   <div class="panel-title">✦ MISSING SUPPLIES ✦</div>
   <div class="order-body" id="orderBody"></div>
@@ -456,10 +492,7 @@ line-height:1.7;
   </div>
 </div>
 
-
-<!-- =========================================================
-     PANEL: ORDER CONFIRMED
-     ========================================================= -->
+<!-- ═══════ PANEL: ORDER CONFIRMED ═══════ -->
 <div class="panel" id="orderConfirmPanel">
   <div class="panel-title">✦ ORDER PLACED ✦</div>
   <div class="order-body">Delivery expected within 30 minutes. Ordering:</div>
@@ -469,23 +502,17 @@ line-height:1.7;
   </div>
 </div>
 
-
-<!-- =========================================================
-     PANEL: TASKS CHECKLIST
-     ========================================================= -->
+<!-- ═══════ PANEL: TASKS CHECKLIST ═══════ -->
 <div class="panel" id="tasksPanel">
   <div class="panel-title">✦ TODAY'S CLEANING TASKS ✦</div>
-  <div class="panel-sub">Go through your home and check off tasks that are already done.</div>
+  <div class="panel-sub">Check off tasks that are already done. Remaining tasks will be assigned one by one.</div>
   <div class="scroll-area" id="tasksList"></div>
   <div class="panel-footer">
     <button onclick="tasksChecklistDone()">Next →</button>
   </div>
 </div>
 
-
-<!-- =========================================================
-     PANEL: TASK CARD (one-by-one assignment)
-     ========================================================= -->
+<!-- ═══════ PANEL: TASK CARD ═══════ -->
 <div class="panel" id="taskCardPanel">
   <div class="panel-title">✦ YOUR TASK ✦</div>
   <div class="task-progress" id="taskProgress"></div>
@@ -497,47 +524,253 @@ line-height:1.7;
   </div>
 </div>
 
-
-<!-- =========================================================
-     PANEL: ALL DONE
-     ========================================================= -->
+<!-- ═══════ PANEL: ALL DONE ═══════ -->
 <div class="panel" id="allDonePanel">
   <div class="all-done-star">✦</div>
   <div class="all-done-title">SHIFT COMPLETE</div>
+  <div class="all-done-total" id="allDoneTotal"></div>
+  <div class="all-done-trust" id="allDoneTrust"></div>
   <div class="all-done-body" id="allDoneBody"></div>
 </div>
 
 
 <script>
 
-// ─── DATA ───────────────────────────────────────────────────
-let inventoryData = [];
-let tasksData     = [];
-let missingItems  = [];       // ids marked missing
-let incompleteTasks = [];     // tasks not checked as done
+// ═══════════════════════════════════════════════════
+//  DIALOGUE POOLS
+// ═══════════════════════════════════════════════════
+
+const happyDialogue = [
+"Good morning, sweetheart! It's lovely to see you back at the Dollhouse Hotel. Every room seems a little brighter when you're here. We have a few guests arriving soon, so could you {task}? I know you'll make it absolutely beautiful.",
+"Welcome back! I've already had two guests compliment your work from yesterday. That made me smile. Let's keep that wonderful momentum going by asking you to {task}.",
+"I always breathe a little easier when you're on shift. I know the hotel is in safe hands. Whenever you're ready, could you {task}? I'm excited to see your magic again.",
+"The Dollhouse Hotel has been waiting for you all morning. The flowers are blooming, the lobby is glowing, and there's just one little thing left. Could you {task} for me?",
+"You've become one of my most trusted housekeepers. Your attention to detail never goes unnoticed. Our next priority is to {task}. Take your time and enjoy making the room sparkle.",
+"Our guests deserve something magical today, and I know exactly who can deliver it. Before they arrive, could you {task}? I can't wait to see the finished result.",
+"I've noticed how much pride you take in your work. That's rare, and it's appreciated more than you know. Let's continue by asking you to {task}.",
+"Some people clean because they have to. You clean because you care, and that's what makes this hotel special. Your next task is to {task}.",
+"The hotel feels so peaceful today. Let's keep that lovely atmosphere going. Whenever you're ready, please {task}.",
+"There's something so satisfying about watching a room come back to life. I'd love for you to {task} next.",
+"Our guests are checking in very soon, and I'd love for them to walk into perfection. Could you {task} before they arrive?",
+"I knew this shift would be a good one as soon as I saw you walk through the door. Let's begin by asking you to {task}.",
+"Every little detail matters here. That's why I trust you with it. Could you please {task}?",
+"You've been earning quite the reputation around here. Guests have started asking for rooms you've prepared. Let's keep that streak going and {task}.",
+"I appreciate everything you do for this hotel. It's because of people like you that guests keep coming back. Your next assignment is to {task}.",
+"Good news! We're almost fully booked today. Let's make sure every guest has the best experience possible by asking you to {task}.",
+"I can already picture how lovely this room will look once you've finished. Please {task} whenever you're ready.",
+"The Dollhouse Hotel isn't just clean... it's cared for. That's because of your effort. Your next job is to {task}.",
+"I know this task might seem small, but the little things create unforgettable experiences. Let's {task}.",
+"Another beautiful morning, another opportunity to make someone's stay magical. Please {task}.",
+"I've got complete confidence in you. Go ahead and {task}, then we'll see what else today has in store.",
+"The hotel has such wonderful energy today. Let's keep it flowing by asking you to {task}.",
+"I've always believed beautiful spaces create beautiful minds. Thank you for helping make that true. Could you {task}?",
+"I don't need to check your work because I already know it'll be lovely. Your next task is to {task}.",
+"The rooms are looking more luxurious every day. You're doing an incredible job. Next up, please {task}.",
+"The guests deserve a little luxury, and you're the perfect person to provide it. Let's {task}.",
+"Wonderful to see you again. The hotel has missed your touch. Before we continue, could you {task}?",
+"You've brought so much life back into this place already. Let's continue restoring the hotel together. Please {task}.",
+"I couldn't ask for a better teammate. Thank you for everything you do. Your next task is simply to {task}.",
+"I don't need to check your work because I already know it'll be perfect. Please {task}."
+];
+
+const neutralDialogue = [
+"Good morning. We have a busy shift ahead of us. Let's begin by asking you to {task}.",
+"Welcome back. Our guests will be arriving throughout the day, so let's prepare the {room}. Please {task}.",
+"I've assigned you another task for this shift. When you're ready, please {task}.",
+"The hotel runs best when every detail is looked after. Your next assignment is to {task}.",
+"We're making steady progress. Let's continue by asking you to {task}.",
+"The {room} still needs a little attention before it's ready. Please {task}.",
+"Your next responsibility today is to {task}. Let me know once it's complete.",
+"Every completed task helps keep the hotel running smoothly. Please {task}.",
+"There's another room waiting for your attention. Could you {task}?",
+"We have a full schedule today, so let's keep moving. Your next task is to {task}.",
+"I've updated today's checklist. The next item is to {task}.",
+"Please head over to the {room} and {task} before moving on.",
+"Everything else is coming together nicely. We just need you to {task}.",
+"The next guest is due shortly. Before they arrive, please {task}.",
+"The little details help maintain our standards. Please {task}.",
+"You're making good progress through today's workload. Next, I'd like you to {task}.",
+"The hotel relies on consistency. Your next assignment is to {task}.",
+"I've added another task to your shift. Please {task} when you're ready.",
+"We're almost halfway through today's jobs. Let's continue by asking you to {task}.",
+"The {room} is next on today's schedule. Please {task}.",
+"Take your time and complete this properly. Your next task is to {task}.",
+"We aim to keep every room guest ready at all times. Please {task}.",
+"The housekeeping checklist has been updated. Your next responsibility is to {task}.",
+"Another task has become available. Please {task}.",
+"Thank you for keeping things moving today. Next, please {task}.",
+"Every completed room helps the whole hotel. Let's continue by asking you to {task}.",
+"Your shift is progressing well. The next assignment is to {task}.",
+"Before we finish this section of the hotel, please {task}.",
+"We're staying on schedule. Let's keep the momentum going by asking you to {task}.",
+"Once you've finished this, I'll have another assignment ready. Please {task}."
+];
+
+const angryDialogue = [
+"We need to talk. I've been noticing corners being cut around the hotel, and that's not what we stand for here. Before anything else, I need you to {task}. Please show me I can trust your work today.",
+"I'm disappointed. The Dollhouse Hotel deserves better care than it's been receiving lately. Let's start putting things right by asking you to {task}.",
+"I don't enjoy repeating myself, but these jobs can't keep being overlooked. Your next responsibility is to {task}. I'd like it completed properly this time.",
+"Our guests notice everything, even the things you think they don't. Right now, I need you to {task}. No shortcuts.",
+"I've had to inspect too many unfinished rooms recently. That's not the standard we're aiming for. Let's begin by asking you to {task}.",
+"The hotel reflects the effort we put into it. Right now, that effort isn't where it should be. Please {task}.",
+"I know you're capable of much better than what I've been seeing. Today is your chance to prove it. Start by {task}.",
+"I'm not angry because mistakes happen. I'm disappointed because I know what you're capable of. Please {task}.",
+"We can't welcome guests into rooms that aren't ready. I need you to {task} immediately.",
+"This hotel doesn't become magical on its own. Every task matters. Your next assignment is to {task}.",
+"I've had to return to several rooms after they were marked complete. That can't keep happening. Please {task} carefully.",
+"You've been rushing, and it shows. Slow down, pay attention, and {task}.",
+"I don't want excuses today. I want action. Please {task}.",
+"The Dollhouse Hotel has a reputation to protect. Right now, I need your full attention. Please {task}.",
+"I know today can be better than yesterday. Show me by completing {task}.",
+"I'm giving you another opportunity to turn things around. Let's begin with {task}.",
+"I'd much rather praise your work than correct it. Help me do that by completing {task}.",
+"The little details have been slipping lately. Those details matter more than you realize. Please {task}.",
+"Our guests expect excellence every single time they stay here. That's the standard we have to meet. Please {task}.",
+"I don't need perfection. I need consistency. Let's begin by asking you to {task}.",
+"I've seen what you're capable of before. That's why this is frustrating. Please {task} and show me that person again.",
+"The hotel has started losing some of its sparkle lately. Let's restore it together. First, {task}.",
+"Take a deep look around this room. Does it really reflect the standard we're aiming for? Please {task}.",
+"This isn't punishment. It's responsibility. Your next task is to {task}.",
+"The guests checking in today deserve your very best effort. Please don't let them down. Begin by {task}.",
+"I'm willing to give you another chance because I believe you can improve. Start by {task}.",
+"Let's make today the shift where everything changes. Please {task} properly and with care.",
+"The hotel only thrives when every member of the team gives their best. Right now, I need that from you. Please {task}.",
+"I hope this is the beginning of a better week for you. Let's start by asking you to {task}.",
+"I know you can earn my trust back. Actions speak louder than words. Go and {task}."
+];
+
+
+// ═══════════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════════
+let inventoryData  = [];
+let tasksData      = [];
+let missingItems   = [];
+let incompleteTasks= [];
 let currentTaskIndex = 0;
 
-// Load JSON data on page load
+let trust    = 50;   // 0–100
+let earnings = 0;    // £
+
+let prevMoodTier = "neutral"; // track for threshold alerts
+let dialogueIndices = { happy:0, neutral:0, angry:0 }; // rotating pointers
+
+// Preload JSON
 Promise.all([
   fetch("inventory.json").then(r=>r.json()),
   fetch("tasks.json").then(r=>r.json())
-]).then(([inv, tasks]) => {
+]).then(([inv,tasks])=>{
   inventoryData = inv;
   tasksData     = tasks;
+  // Shuffle dialogue arrays for variety
+  shuffle(happyDialogue);
+  shuffle(neutralDialogue);
+  shuffle(angryDialogue);
 });
 
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    let j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+}
 
-// ─── SCENE HELPERS ──────────────────────────────────────────
-function showScene(hide, show){
+
+// ═══════════════════════════════════════════════════
+//  TRUST & EARNINGS HELPERS
+// ═══════════════════════════════════════════════════
+function getMoodTier(){
+  if(trust >= 70) return "happy";
+  if(trust >= 30) return "neutral";
+  return "angry";
+}
+
+function addTrust(delta){
+  let oldTier = getMoodTier();
+  trust = Math.max(0, Math.min(100, trust + delta));
+  let newTier = getMoodTier();
+  updateHUD();
+  if(oldTier !== newTier) showMoodShiftBanner(newTier);
+}
+
+function addEarnings(amount){
+  earnings += amount;
+  updateHUD();
+}
+
+function taskEarnings(task){
+  let base = [0,5,12,20][task.difficulty] || 5;
+  if(task.type === "Luxury") base += 5;
+  return base;
+}
+
+function updateHUD(){
+  let tier = getMoodTier();
+  let moodEl = document.getElementById("hudMood");
+  moodEl.className = "hud-mood " + tier;
+  if(tier === "happy")   moodEl.textContent = "💗 HAPPY";
+  if(tier === "neutral") moodEl.textContent = "😐 NEUTRAL";
+  if(tier === "angry")   moodEl.textContent = "🖤 DISAPPOINTED";
+
+  let fill = document.getElementById("trustFill");
+  fill.style.width = trust + "%";
+  fill.style.background = tier === "happy" ? "#ff66ff"
+                         : tier === "neutral" ? "#aaaaaa"
+                         : "#ff4466";
+  document.getElementById("trustNum").textContent = trust;
+  document.getElementById("hudEarnings").textContent = "💰 £" + earnings;
+}
+
+function showRewardNotif(money, trustDelta){
+  let notif = document.getElementById("rewardNotif");
+  document.getElementById("rewardMoney").textContent = "+£" + money;
+  document.getElementById("rewardTrust").textContent =
+    (trustDelta >= 0 ? "▲ Trust +" : "▼ Trust ") + trustDelta;
+  notif.classList.add("show");
+  setTimeout(()=>notif.classList.remove("show"), 1600);
+}
+
+function showMoodShiftBanner(newTier){
+  let banner = document.getElementById("moodBanner");
+  if(newTier === "happy")   banner.textContent = "💗 The manager is warming up to you...";
+  if(newTier === "neutral") banner.textContent = "😐 The manager's mood has cooled.";
+  if(newTier === "angry")   banner.textContent = "🖤 The manager is losing patience.";
+  banner.classList.add("show");
+  setTimeout(()=>banner.classList.remove("show"), 3000);
+}
+
+
+// ═══════════════════════════════════════════════════
+//  DIALOGUE SELECTION
+// ═══════════════════════════════════════════════════
+function getMoodDialogue(task){
+  let tier = getMoodTier();
+  let pool = tier === "happy" ? happyDialogue
+           : tier === "neutral" ? neutralDialogue
+           : angryDialogue;
+  let key  = tier === "happy" ? "happy"
+           : tier === "neutral" ? "neutral" : "angry";
+  let idx  = dialogueIndices[key] % pool.length;
+  dialogueIndices[key]++;
+  let line = pool[idx];
+  // Replace placeholders
+  line = line.replace(/\{task\}/g, task.name.toLowerCase());
+  line = line.replace(/\{room\}/g, task.room);
+  return line;
+}
+
+
+// ═══════════════════════════════════════════════════
+//  SCENE HELPERS
+// ═══════════════════════════════════════════════════
+function showScene(hide,show){
   document.getElementById(hide).classList.remove("show");
   document.getElementById(show).classList.add("show");
 }
-
 function showPanel(id){
   document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
   if(id) document.getElementById(id).classList.add("active");
 }
-
 function setBossDialogue(text){
   document.getElementById("bossDialogueText").textContent = text;
   document.getElementById("bossDialogue").style.display = "block";
@@ -546,81 +779,13 @@ function setAvatarDialogue(text){
   document.getElementById("avatarDialogueText").textContent = text;
   document.getElementById("avatarDialogue").style.display = text ? "block" : "none";
 }
-function hideBossDialogue(){
-  document.getElementById("bossDialogue").style.display = "none";
-}
+function hideBossDialogue(){ document.getElementById("bossDialogue").style.display = "none"; }
+function hideAvatarDialogue(){ document.getElementById("avatarDialogue").style.display = "none"; }
 
 
-// ─── START BUTTON ────────────────────────────────────────────
-function startGame(){
-  document.querySelector(".title-screen").style.display = "none";
-
-  // unlock speech
-  let u = new SpeechSynthesisUtterance("");
-  u.volume = 0;
-  speechSynthesis.speak(u);
-
-  showScene("exterior","videoScene");
-
-  let video = document.getElementById("hotelVideo");
-  function playWhenReady(v){
-    if(v.readyState >= 3){ v.play(); }
-    else{
-      v.addEventListener("canplaythrough", function h(){
-        v.removeEventListener("canplaythrough",h);
-        v.play();
-      },{once:true});
-      v.load();
-    }
-  }
-  playWhenReady(video);
-}
-
-document.getElementById("hotelVideo").onended = function(){ transitionToLobby(); };
-
-function transitionToLobby(){
-  let flash = document.getElementById("flash");
-  flash.style.opacity = 1;
-  setTimeout(()=>{
-    showScene("videoScene","lobby");
-    flash.style.opacity = 0;
-    setTimeout(()=>{ bossTalkWelcome(); }, 1500);
-  }, 900);
-}
-
-
-// ─── TALKING HELPERS ─────────────────────────────────────────
-function playTalking(talkingID, idleID){
-  let idle    = document.getElementById(idleID);
-  let talking = document.getElementById(talkingID);
-  idle.style.display    = "none";
-  talking.style.display = "block";
-  if(talking.tagName === "VIDEO"){
-    talking.muted = true; talking.volume = 0; talking.currentTime = 0;
-    if(talking.readyState >= 3){ talking.play(); }
-    else{
-      talking.addEventListener("canplaythrough", function h(){
-        talking.removeEventListener("canplaythrough",h);
-        talking.play();
-      },{once:true});
-      talking.load();
-    }
-  }
-}
-
-function stopTalking(){
-  ["bossTalking","avatarTalking"].forEach(id=>{
-    let el = document.getElementById(id);
-    if(el.tagName === "VIDEO"){ el.pause(); el.currentTime = 0; }
-    el.style.display = "none";
-  });
-  ["bossIdle","avatarIdle"].forEach(id=>{
-    document.getElementById(id).style.display = "block";
-  });
-}
-
-
-// ─── TTS ─────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════
+//  TTS
+// ═══════════════════════════════════════════════════
 let voices = [];
 function loadVoices(){ voices = speechSynthesis.getVoices(); }
 loadVoices();
@@ -644,59 +809,112 @@ function getVoice(type){
 
 function speak(text, type, onDone){
   speechSynthesis.cancel();
-
   function doSpeak(){
-    if(voices.length === 0) voices = speechSynthesis.getVoices();
+    if(voices.length===0) voices=speechSynthesis.getVoices();
     let speech = new SpeechSynthesisUtterance(text);
     let voice  = getVoice(type);
     if(voice) speech.voice = voice;
-    if(type === "avatar"){ speech.pitch = 1.6; speech.rate = 1.05; }
-    if(type === "boss")  { speech.pitch = 1;   speech.rate = 0.85; }
+    if(type==="avatar"){ speech.pitch=1.6; speech.rate=1.05; }
+    if(type==="boss")  { speech.pitch=1;   speech.rate=0.85; }
     speech.volume = 1;
-    speech.onend = function(){
-      stopTalking();
-      if(onDone) onDone();
-    };
+    speech.onend = function(){ stopTalking(); if(onDone) onDone(); };
     setTimeout(()=>speechSynthesis.speak(speech), 150);
   }
-
-  if(voices.length > 0){
-    doSpeak();
-  } else {
-    let attempts = 0;
-    let poll = setInterval(()=>{
-      voices = speechSynthesis.getVoices();
-      attempts++;
-      if(voices.length > 0 || attempts > 30){ clearInterval(poll); doSpeak(); }
-    }, 100);
+  if(voices.length > 0){ doSpeak(); }
+  else{
+    let a=0, poll=setInterval(()=>{
+      voices=speechSynthesis.getVoices(); a++;
+      if(voices.length>0||a>30){ clearInterval(poll); doSpeak(); }
+    },100);
   }
 }
 
 
-// ═══════════════════════════════════════════════════════════
-//  STAGE 1 — WELCOME
-// ═══════════════════════════════════════════════════════════
-function bossTalkWelcome(){
-  let line = "Welcome to The Dollhouse Hotel. This place has lost its sparkle. I need someone who can restore it.";
-  setBossDialogue(""" + line + """);
-  setAvatarDialogue("");
-  playTalking("bossTalking","bossIdle");
-  speak(line, "boss", ()=>{
-    setTimeout(()=>{ bossInventoryPrompt(); }, 1200);
+// ═══════════════════════════════════════════════════
+//  TALKING HELPERS
+// ═══════════════════════════════════════════════════
+function playTalking(talkingID, idleID){
+  document.getElementById(idleID).style.display = "none";
+  let t = document.getElementById(talkingID);
+  t.style.display = "block";
+  if(t.tagName==="VIDEO"){
+    t.muted=true; t.volume=0; t.currentTime=0;
+    if(t.readyState>=3){ t.play(); }
+    else{
+      t.addEventListener("canplaythrough",function h(){
+        t.removeEventListener("canplaythrough",h); t.play();
+      },{once:true});
+      t.load();
+    }
+  }
+}
+function stopTalking(){
+  ["bossTalking","avatarTalking"].forEach(id=>{
+    let el=document.getElementById(id);
+    if(el.tagName==="VIDEO"){ el.pause(); el.currentTime=0; }
+    el.style.display="none";
+  });
+  ["bossIdle","avatarIdle"].forEach(id=>{
+    document.getElementById(id).style.display="block";
   });
 }
 
 
-// ═══════════════════════════════════════════════════════════
-//  STAGE 2 — INVENTORY PROMPT
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+//  START
+// ═══════════════════════════════════════════════════
+function startGame(){
+  document.querySelector(".title-screen").style.display = "none";
+  let u=new SpeechSynthesisUtterance(""); u.volume=0; speechSynthesis.speak(u);
+  showScene("exterior","videoScene");
+  let video=document.getElementById("hotelVideo");
+  function playWhenReady(v){
+    if(v.readyState>=3){ v.play(); }
+    else{
+      v.addEventListener("canplaythrough",function h(){
+        v.removeEventListener("canplaythrough",h); v.play();
+      },{once:true});
+      v.load();
+    }
+  }
+  playWhenReady(video);
+}
+
+document.getElementById("hotelVideo").onended=function(){ transitionToLobby(); };
+
+function transitionToLobby(){
+  let flash=document.getElementById("flash");
+  flash.style.opacity=1;
+  setTimeout(()=>{
+    showScene("videoScene","lobby");
+    flash.style.opacity=0;
+    // Show HUD
+    document.getElementById("hud").style.display="flex";
+    updateHUD();
+    setTimeout(()=>bossTalkWelcome(), 1500);
+  },900);
+}
+
+
+// ═══════════════════════════════════════════════════
+//  STAGE 1 — WELCOME
+// ═══════════════════════════════════════════════════
+function bossTalkWelcome(){
+  let line = "Welcome to The Dollhouse Hotel. This place has lost its sparkle. I need someone who can restore it.";
+  setBossDialogue("\u201c"+line+"\u201d");
+  playTalking("bossTalking","bossIdle");
+  speak(line,"boss",()=>{ setTimeout(()=>bossInventoryPrompt(), 1200); });
+}
+
+
+// ═══════════════════════════════════════════════════
+//  STAGE 2 — INVENTORY
+// ═══════════════════════════════════════════════════
 function bossInventoryPrompt(){
   let line = "Before we begin, I need you to take a full inventory of your cleaning supplies. Mark off anything you don't have with you today.";
-  setBossDialogue(""" + line + """);
+  setBossDialogue("\u201c"+line+"\u201d");
   playTalking("bossTalking","bossIdle");
-  speak(line, "boss", ()=>{
-    setTimeout(()=>{ openInventoryPanel(); }, 600);
-  });
+  speak(line,"boss",()=>{ setTimeout(()=>openInventoryPanel(), 600); });
 }
 
 function openInventoryPanel(){
@@ -706,29 +924,23 @@ function openInventoryPanel(){
 }
 
 function buildInventoryList(){
-  let container = document.getElementById("inventoryList");
-  container.innerHTML = "";
-  // Group by category
-  let cats = {};
+  let container=document.getElementById("inventoryList");
+  container.innerHTML="";
+  let cats={};
   inventoryData.forEach(item=>{
-    if(!cats[item.category]) cats[item.category] = [];
+    if(!cats[item.category]) cats[item.category]=[];
     cats[item.category].push(item);
   });
-  Object.entries(cats).forEach(([cat, items])=>{
-    let h = document.createElement("div");
-    h.className = "cat-title";
-    h.textContent = cat.toUpperCase();
+  Object.entries(cats).forEach(([cat,items])=>{
+    let h=document.createElement("div");
+    h.className="cat-title"; h.textContent=cat.toUpperCase();
     container.appendChild(h);
     items.forEach(item=>{
-      let row = document.createElement("label");
-      row.className = "item-row";
-      row.innerHTML = `
-        <input type="checkbox" id="inv-${item.id}" data-id="${item.id}">
-        <span>${item.name}</span>
-        ${item.required ? '<span class="req-tag">REQUIRED</span>' : ''}
-      `;
-      row.querySelector("input").addEventListener("change", function(){
-        row.classList.toggle("is-missing", this.checked);
+      let row=document.createElement("label");
+      row.className="item-row";
+      row.innerHTML=`<input type="checkbox" id="inv-${item.id}" data-id="${item.id}"><span>${item.name}</span>${item.required?'<span class="req-tag">REQUIRED</span>':''}`;
+      row.querySelector("input").addEventListener("change",function(){
+        row.classList.toggle("is-missing",this.checked);
       });
       container.appendChild(row);
     });
@@ -736,46 +948,40 @@ function buildInventoryList(){
 }
 
 function inventoryDone(){
-  // Collect missing items
-  missingItems = [];
-  document.querySelectorAll("#inventoryList input[type=checkbox]:checked").forEach(cb=>{
-    let id = cb.dataset.id;
-    let found = inventoryData.find(i=>i.id===id);
+  missingItems=[];
+  document.querySelectorAll("#inventoryList input:checked").forEach(cb=>{
+    let found=inventoryData.find(i=>i.id===cb.dataset.id);
     if(found) missingItems.push(found);
   });
-
+  // Trust penalty for many missing required items
+  let missingRequired=missingItems.filter(i=>i.required).length;
+  if(missingRequired>0) addTrust(-Math.min(missingRequired*2, 10));
   showPanel(null);
-  if(missingItems.length > 0){
-    bossOrderPrompt();
-  } else {
-    bossNoMissingItems();
-  }
+  if(missingItems.length>0) bossOrderPrompt();
+  else bossNoMissingItems();
 }
 
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 //  STAGE 3 — ORDER DECISION
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 function bossNoMissingItems(){
-  let line = "Wonderful — you have everything you need. Let's get to work!";
-  setBossDialogue(""" + line + """);
+  let line="Wonderful — you have everything you need. Let's get to work!";
+  setBossDialogue("\u201c"+line+"\u201d");
+  document.getElementById("bossDialogue").style.display="block";
   playTalking("bossTalking","bossIdle");
-  speak(line, "boss", ()=>{
-    setTimeout(()=>{ bossTasksPrompt(); }, 800);
-  });
+  speak(line,"boss",()=>{ addTrust(3); setTimeout(()=>bossTasksPrompt(), 800); });
 }
 
 function bossOrderPrompt(){
-  let n = missingItems.length;
-  let line = `You are missing ${n} item${n>1?"s":""}. Would you like to order ${n>1?"them":"it"} for delivery in the next 30 minutes via UberEats, Deliveroo, DoorDash, or an instant delivery service?`;
-
-  setBossDialogue(""" + line + """);
+  let n=missingItems.length;
+  let line=`You are missing ${n} item${n>1?"s":""}. Would you like to order ${n>1?"them":"it"} for delivery in the next 30 minutes via UberEats, Deliveroo, DoorDash, or an instant delivery service?`;
+  setBossDialogue("\u201c"+line+"\u201d");
+  document.getElementById("bossDialogue").style.display="block";
   playTalking("bossTalking","bossIdle");
-  speak(line, "boss", ()=>{
-    // Show order panel
-    document.getElementById("orderBody").textContent = line;
-    let listEl = document.getElementById("missingListEl");
-    listEl.innerHTML = missingItems.map(i=>`• ${i.name}`).join("<br>");
+  speak(line,"boss",()=>{
+    document.getElementById("orderBody").textContent=line;
+    document.getElementById("missingListEl").innerHTML=missingItems.map(i=>`• ${i.name}`).join("<br>");
     hideBossDialogue();
     showPanel("orderPanel");
   });
@@ -783,33 +989,28 @@ function bossOrderPrompt(){
 
 function acceptOrder(){
   showPanel(null);
-  let names = missingItems.map(i=>i.name);
-  let shortList = names.slice(0,6).join(", ") + (names.length > 6 ? `, and ${names.length-6} more` : "");
-  let line = `I'll place the order now. Ordering: ${shortList}. Delivery should arrive within 30 minutes.`;
-
-  setAvatarDialogue(""" + line + """);
-  setBossDialogue("");
+  addTrust(4);
+  let names=missingItems.map(i=>i.name);
+  let shortList=names.slice(0,6).join(", ")+(names.length>6?`, and ${names.length-6} more`:"");
+  let line=`I'll place the order now. Ordering: ${shortList}. Delivery should arrive within 30 minutes.`;
+  setAvatarDialogue("\u201c"+line+"\u201d");
   hideBossDialogue();
   playTalking("avatarTalking","avatarIdle");
-  speak(line, "avatar", ()=>{
-    setAvatarDialogue("");
-    // Show confirm panel
-    let confirmEl = document.getElementById("confirmListEl");
-    confirmEl.innerHTML = names.map(n=>`✓ ${n}`).join("<br>");
+  speak(line,"avatar",()=>{
+    hideAvatarDialogue();
+    document.getElementById("confirmListEl").innerHTML=names.map(n=>`✓ ${n}`).join("<br>");
     showPanel("orderConfirmPanel");
   });
 }
 
 function refuseOrder(){
   showPanel(null);
-  let line = "I'll manage with what I have today.";
-  setAvatarDialogue(""" + line + """);
+  addTrust(-5);
+  let line="I'll manage with what I have today.";
+  setAvatarDialogue("\u201c"+line+"\u201d");
   hideBossDialogue();
   playTalking("avatarTalking","avatarIdle");
-  speak(line, "avatar", ()=>{
-    setAvatarDialogue("");
-    setTimeout(()=>{ bossTasksPrompt(); }, 600);
-  });
+  speak(line,"avatar",()=>{ hideAvatarDialogue(); setTimeout(()=>bossTasksPrompt(), 600); });
 }
 
 function proceedToTasks(){
@@ -818,17 +1019,15 @@ function proceedToTasks(){
 }
 
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 //  STAGE 4 — TASKS CHECKLIST
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 function bossTasksPrompt(){
-  let line = "Now, go through your home and mark off any tasks that are already done. Then press Next when you're ready.";
-  setBossDialogue(""" + line + """);
-  document.getElementById("bossDialogue").style.display = "block";
+  let line="Now go through your home and mark off any tasks that are already done. Press Next when you're ready to begin your assignments.";
+  setBossDialogue("\u201c"+line+"\u201d");
+  document.getElementById("bossDialogue").style.display="block";
   playTalking("bossTalking","bossIdle");
-  speak(line, "boss", ()=>{
-    setTimeout(()=>{ openTasksPanel(); }, 600);
-  });
+  speak(line,"boss",()=>{ setTimeout(()=>openTasksPanel(), 600); });
 }
 
 function openTasksPanel(){
@@ -838,29 +1037,23 @@ function openTasksPanel(){
 }
 
 function buildTasksList(){
-  let container = document.getElementById("tasksList");
-  container.innerHTML = "";
-  // Group by room
-  let rooms = {};
+  let container=document.getElementById("tasksList");
+  container.innerHTML="";
+  let rooms={};
   tasksData.forEach(task=>{
-    if(!rooms[task.room]) rooms[task.room] = [];
+    if(!rooms[task.room]) rooms[task.room]=[];
     rooms[task.room].push(task);
   });
-  Object.entries(rooms).forEach(([room, tasks])=>{
-    let h = document.createElement("div");
-    h.className = "cat-title";
-    h.textContent = room.toUpperCase();
+  Object.entries(rooms).forEach(([room,tasks])=>{
+    let h=document.createElement("div");
+    h.className="cat-title"; h.textContent=room.toUpperCase();
     container.appendChild(h);
     tasks.forEach(task=>{
-      let row = document.createElement("label");
-      row.className = "task-item-row";
-      row.innerHTML = `
-        <input type="checkbox" id="task-${task.id}" data-id="${task.id}">
-        <span>${task.name}</span>
-        ${task.type==="Luxury" ? '<span class="task-room-tag">✦ LUXURY</span>' : ''}
-      `;
-      row.querySelector("input").addEventListener("change", function(){
-        row.classList.toggle("is-done", this.checked);
+      let row=document.createElement("label");
+      row.className="task-item-row";
+      row.innerHTML=`<input type="checkbox" id="task-${task.id}" data-id="${task.id}"><span>${task.name}</span>${task.type==="Luxury"?'<span class="task-room-tag">✦ LUXURY</span>':''}`;
+      row.querySelector("input").addEventListener("change",function(){
+        row.classList.toggle("is-done",this.checked);
       });
       container.appendChild(row);
     });
@@ -868,120 +1061,127 @@ function buildTasksList(){
 }
 
 function tasksChecklistDone(){
-  // Collect incomplete tasks (not checked)
-  let donIds = new Set();
-  document.querySelectorAll("#tasksList input[type=checkbox]:checked").forEach(cb=>{
-    donIds.add(cb.dataset.id);
-  });
-  incompleteTasks = tasksData.filter(t => !donIds.has(t.id));
-  currentTaskIndex = 0;
+  let doneIds=new Set();
+  document.querySelectorAll("#tasksList input:checked").forEach(cb=>doneIds.add(cb.dataset.id));
+  incompleteTasks=tasksData.filter(t=>!doneIds.has(t.id));
+  currentTaskIndex=0;
   showPanel(null);
-  if(incompleteTasks.length === 0){
-    allTasksDone();
-  } else {
-    bossAssignFirst();
-  }
+  if(incompleteTasks.length===0) allTasksDone();
+  else bossAssignFirst();
 }
 
 
-// ═══════════════════════════════════════════════════════════
-//  STAGE 5 — TASK ASSIGNMENT (one by one)
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+//  STAGE 5 — TASK ASSIGNMENT
+// ═══════════════════════════════════════════════════
 function bossAssignFirst(){
-  let n = incompleteTasks.length;
-  let line = `You have ${n} task${n>1?"s":""} remaining. Let's get started. ${taskIntroLine(0)}`;
-  setBossDialogue(""" + line + """);
-  document.getElementById("bossDialogue").style.display = "block";
+  let n=incompleteTasks.length;
+  let firstTask=incompleteTasks[0];
+  let moodOpener = getMoodTier()==="happy"
+    ? `Lovely! You have ${n} task${n>1?"s":""} ahead of you.`
+    : getMoodTier()==="neutral"
+    ? `Good. You have ${n} task${n>1?"s":""} remaining today.`
+    : `You have ${n} task${n>1?"s":""} that still need your attention.`;
+  let line=`${moodOpener} ${getMoodDialogue(firstTask)}`;
+  setBossDialogue("\u201c"+line+"\u201d");
+  document.getElementById("bossDialogue").style.display="block";
   playTalking("bossTalking","bossIdle");
-  speak(line, "boss", ()=>{
-    setTimeout(()=>{ showTaskCard(0); }, 500);
-  });
-}
-
-function taskIntroLine(index){
-  if(index >= incompleteTasks.length) return "";
-  let t = incompleteTasks[index];
-  return `Your first task: ${t.name}, in the ${t.room}.`;
+  speak(line,"boss",()=>{ setTimeout(()=>showTaskCard(0), 500); });
 }
 
 function showTaskCard(index){
-  if(index >= incompleteTasks.length){ allTasksDone(); return; }
-  let task = incompleteTasks[index];
-  let total = incompleteTasks.length;
-
-  document.getElementById("taskProgress").textContent = `Task ${index+1} of ${total}`;
-  document.getElementById("taskRoom").textContent     = task.room.toUpperCase();
-  document.getElementById("taskName").textContent     = task.name;
-  let items = task.requiredItems && task.requiredItems.length > 0
-    ? "You'll need: " + task.requiredItems.join(", ")
-    : "";
-  document.getElementById("taskItems").textContent = items;
-
+  if(index>=incompleteTasks.length){ allTasksDone(); return; }
+  let task=incompleteTasks[index];
+  let total=incompleteTasks.length;
+  document.getElementById("taskProgress").textContent=`Task ${index+1} of ${total}`;
+  document.getElementById("taskRoom").textContent=task.room.toUpperCase();
+  document.getElementById("taskName").textContent=task.name;
+  let items=task.requiredItems&&task.requiredItems.length>0
+    ? "You'll need: "+task.requiredItems.join(", ") : "";
+  document.getElementById("taskItems").textContent=items;
   hideBossDialogue();
-  setAvatarDialogue("");
+  hideAvatarDialogue();
   showPanel("taskCardPanel");
 
-  // Boss speaks the task assignment (unless it's the very first task — already spoken in bossAssignFirst)
-  if(index > 0){
-    let line = `Next task: ${task.name}, in the ${task.room}.`;
-    setBossDialogue(""" + line + """);
-    document.getElementById("bossDialogue").style.display = "block";
+  // Speak mood-based dialogue for tasks after the first
+  if(index>0){
+    let line=getMoodDialogue(task);
+    setBossDialogue("\u201c"+line+"\u201d");
+    document.getElementById("bossDialogue").style.display="block";
     playTalking("bossTalking","bossIdle");
-    speak(line, "boss", ()=>{
-      hideBossDialogue();
-    });
+    speak(line,"boss",()=>{ hideBossDialogue(); });
   }
 }
 
 function markTaskDone(){
-  // Avatar confirms
   showPanel(null);
-  let task = incompleteTasks[currentTaskIndex];
-  let confirmLines = [
+  let task=incompleteTasks[currentTaskIndex];
+
+  // Calculate reward
+  let earned=taskEarnings(task);
+  let trustGain=task.type==="Luxury" ? 3 : 2;
+
+  addEarnings(earned);
+  addTrust(trustGain);
+  showRewardNotif(earned, trustGain);
+
+  // Avatar confirms
+  let confirmLines=[
     "Done! What's next?",
     "All done. On to the next one!",
     "Complete! Ready for the next task.",
     "Finished! What else needs doing?",
-    "Done and dusted!"
+    "Done and dusted!",
+    "That's taken care of.",
+    "All sorted!",
+    "Moving on!"
   ];
-  let line = confirmLines[currentTaskIndex % confirmLines.length];
-  setAvatarDialogue(""" + line + """);
-  document.getElementById("avatarDialogue").style.display = "block";
+  let line=confirmLines[currentTaskIndex%confirmLines.length];
+  setAvatarDialogue("\u201c"+line+"\u201d");
+  document.getElementById("avatarDialogue").style.display="block";
   playTalking("avatarTalking","avatarIdle");
-  speak(line, "avatar", ()=>{
-    setAvatarDialogue("");
+  speak(line,"avatar",()=>{
+    hideAvatarDialogue();
     currentTaskIndex++;
-    if(currentTaskIndex >= incompleteTasks.length){
-      allTasksDone();
-    } else {
-      showTaskCard(currentTaskIndex);
-    }
+    if(currentTaskIndex>=incompleteTasks.length) allTasksDone();
+    else showTaskCard(currentTaskIndex);
   });
 }
 
 
-// ═══════════════════════════════════════════════════════════
-//  STAGE 6 — ALL DONE
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+//  STAGE 6 — SHIFT COMPLETE
+// ═══════════════════════════════════════════════════
 function allTasksDone(){
   showPanel(null);
-  let line = "Exceptional work today. The Dollhouse Hotel is looking absolutely flawless. I'm impressed with your dedication. You've truly restored the sparkle.";
-  setBossDialogue(""" + line + """);
-  document.getElementById("bossDialogue").style.display = "block";
+  let tier=getMoodTier();
+  let line=tier==="happy"
+    ? "Exceptional work today. The Dollhouse Hotel is looking absolutely flawless. I'm so proud of you, darling. The guests couldn't ask for better."
+    : tier==="neutral"
+    ? "Good work today. The hotel is in order and our guests are well taken care of. See you tomorrow."
+    : "The tasks are complete. The hotel is presentable. Tomorrow I expect a higher standard from you.";
+
+  setBossDialogue("\u201c"+line+"\u201d");
+  document.getElementById("bossDialogue").style.display="block";
   playTalking("bossTalking","bossIdle");
-  speak(line, "boss", ()=>{
+  speak(line,"boss",()=>{
+    hideBossDialogue();
     setTimeout(()=>{
-      hideBossDialogue();
-      document.getElementById("allDoneBody").innerHTML =
-        "You completed all your tasks for today.<br><br>" +
-        "<span style='color:#ff00ff'>The Dollhouse Hotel is sparkling.</span><br><br>" +
+      let tier=getMoodTier();
+      document.getElementById("allDoneTotal").textContent="£"+earnings+" earned today";
+      document.getElementById("allDoneTrust").textContent=
+        tier==="happy" ? "💗 Manager mood: Happy · Trust "+trust+"/100"
+        : tier==="neutral" ? "😐 Manager mood: Neutral · Trust "+trust+"/100"
+        : "🖤 Manager mood: Disappointed · Trust "+trust+"/100";
+      document.getElementById("allDoneBody").innerHTML=
+        "You completed all your tasks for today.<br><br>"+
+        "<span style='color:#ff00ff'>The Dollhouse Hotel is sparkling.</span><br><br>"+
         "Well done, housekeeper. ✦";
       showPanel("allDonePanel");
-    }, 1000);
+    },1000);
   });
 }
 
 </script>
-
 </body>
 </html>
