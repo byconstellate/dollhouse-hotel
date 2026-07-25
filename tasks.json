@@ -95,11 +95,11 @@
   {"id":"LAUND001","name":"Sort washing","room":"Laundry Room","category":"Bedding & Linen","type":"Task","difficulty":1,"estimatedTime":10,"requiredItems":["Dirty linen bags"],"completed":false,"selected":false},
   {"id":"LAUND002","name":"Wash whites","room":"Laundry Room","category":"Bedding & Linen","type":"Task","difficulty":2,"estimatedTime":60,"requiredItems":["Bleach"],"completed":false,"selected":false},
   {"id":"LAUND003","name":"Fold clothes","room":"Laundry Room","category":"Bedding & Linen","type":"Task","difficulty":1,"estimatedTime":15,"requiredItems":[],"completed":false,"selected":false},
-  {"id":"LAUND004","name":"Iron clothes","room":"Laundry Room","category":"Bedding & Linen","type":"Task","difficulty":2,"estimatedTime":30,"requiredItems":[],"completed":false,"selected":false}
+  {"id":"LAUND004","name":"Iron clothes","room":"Laundry Room","category":"Bedding & Linen","type":"Task","difficulty":2,"estimatedTime":30,"requiredItems":[],"completed":false,"selected":false},
 
   {"id":"LOBBY001","name":"Mop the floor","room":"Reception & Lobby","category":"Cleaning","type":"Task","difficulty":2,"estimatedTime":20,"requiredItems":["Mop bucket with wringer","Floor cleaner","Rubber gloves"],"completed":false,"selected":false},
   {"id":"LOBBY002","name":"Vacuum carpet","room":"Reception & Lobby","category":"Cleaning","type":"Task","difficulty":2,"estimatedTime":15,"requiredItems":["Vacuum cleaner"],"completed":false,"selected":false},
   {"id":"LOBBY003","name":"Dust surfaces","room":"Reception & Lobby","category":"Cleaning","type":"Task","difficulty":1,"estimatedTime":5,"requiredItems":["Microfibre cloths","Furniture polish"],"completed":false,"selected":false},
-  {"id":"LOBBY004","name":"Wipe surfaces desk","room":"Reception & Lobby","category":"Cleaning","type":"Task","difficulty":1,"estimatedTime":5,"requiredItems":["Multi-surface cleaner","Microfibre cloths"],"completed":false,"selected":false},
+  {"id":"LOBBY004","name":"Wipe surfaces desk","room":"Reception & Lobby","category":"Cleaning","type":"Task","difficulty":1,"estimatedTime":5,"requiredItems":["Multi-surface cleaner","Microfibre cloths"],"completed":false,"selected":false}
 
 ]

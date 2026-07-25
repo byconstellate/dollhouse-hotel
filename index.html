@@ -1083,24 +1083,23 @@ speechSynthesis.onvoiceschanged=loadVoices;
 function getVoice(type){
   let en=voices.filter(v=>v.lang.toLowerCase().includes("en"));
   if(type==="avatar"){
-    // Prefer exact name match first
     let exact=voices.find(v=>v.name==="Google UK English Female");
     if(exact) return exact;
     let gb=en.filter(v=>v.lang==="en-GB"||v.lang.startsWith("en-GB"));
-    return gb.find(v=>v.name.toLowerCase().includes("google uk english female"))
-      ||gb.find(v=>v.name.toLowerCase().includes("female"))
+    return gb.find(v=>v.name.toLowerCase().includes("female"))
       ||gb[0]||en[0];
   }
   if(type==="boss"){
-    // Priority: Google US English (most natural on Chrome) → Samantha → any US female → any US → any EN
-    let googleUS=voices.find(v=>v.name==="Google US English");
-    if(googleUS) return googleUS;
+    // Prefer Google UK English Female — sounds like a proper hotel manager
+    let ukFemale=voices.find(v=>v.name==="Google UK English Female");
+    if(ukFemale) return ukFemale;
     let samantha=voices.find(v=>v.name==="Samantha");
     if(samantha) return samantha;
+    let gb=en.filter(v=>v.lang==="en-GB"||v.lang.startsWith("en-GB"));
+    let gbFemale=gb.find(v=>v.name.toLowerCase().includes("female"))||gb[0];
+    if(gbFemale) return gbFemale;
     let us=en.filter(v=>v.lang==="en-US"||v.lang.startsWith("en-US"));
-    return us.find(v=>v.name.toLowerCase().includes("female"))
-      ||us.find(v=>v.name.toLowerCase().includes("zira"))
-      ||us[0]||en[0];
+    return us.find(v=>v.name.toLowerCase().includes("female"))||us[0]||en[0];
   }
 }
 
@@ -1113,8 +1112,8 @@ function speak(text,type,onDone){
     if(voice) speech.voice=voice;
     // Boss: high pitch (max 2.0), slightly brisk rate for a prim manager feel
     // Avatar: very high pitch, natural pace
-    if(type==="avatar"){ speech.pitch=2.0; speech.rate=1.05; }
-    if(type==="boss")  { speech.pitch=2.0; speech.rate=0.95; }
+    if(type==="avatar"){ speech.pitch=1.25; speech.rate=1.0; }
+    if(type==="boss")  { speech.pitch=1.0;  speech.rate=0.9; }
     speech.volume=1;
     let rate=type==="boss"?0.85:1.05;
     let estMs=Math.max(3500,(text.length/5)*(60000/130)/rate)+2500;
