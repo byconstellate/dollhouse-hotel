@@ -1,4 +1,4 @@
-const CACHE = "dollhouse-v2";
+const CACHE = "dollhouse-v3";
 const ASSETS = [
   "./",
   "./index.html",
