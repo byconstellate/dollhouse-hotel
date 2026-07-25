@@ -189,6 +189,29 @@ transition:opacity 1.4s ease;
 pointer-events:none;
 }
 
+/* ═══════════════════ FULLSCREEN BUTTON ═══════════════════ */
+#fsBtn{
+position:fixed;
+top:14px;
+left:16px;
+z-index:500;
+background:rgba(8,0,12,0.65);
+border:1px solid rgba(255,0,255,0.4);
+border-radius:8px;
+color:#ff88ff;
+font-size:18px;
+width:36px;
+height:36px;
+display:flex;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+backdrop-filter:blur(4px);
+transition:background 0.2s, border-color 0.2s;
+padding:0;
+}
+#fsBtn:hover{ background:rgba(255,0,255,0.15); border-color:#ff00ff; }
+
 /* ═══════════════════ HUD ═══════════════════ */
 #hud{
 position:absolute;
@@ -556,6 +579,9 @@ border-radius:8px;
 <body>
 
 <div id="flash"></div>
+
+<!-- Fullscreen toggle -->
+<button id="fsBtn" onclick="toggleFS()" title="Toggle fullscreen">⛶</button>
 
 <!-- HUD (trust + earnings) -->
 <div id="hud">
@@ -1158,20 +1184,36 @@ function stopTalking(){
 // ═══════════════════════════════════════════════════
 //  START
 // ═══════════════════════════════════════════════════
+function toggleFS(){
+  let btn=document.getElementById("fsBtn");
+  if(!document.fullscreenElement){
+    document.documentElement.requestFullscreen().catch(()=>{});
+    btn.textContent="⛶";
+    btn.title="Exit fullscreen";
+  } else {
+    document.exitFullscreen().catch(()=>{});
+    btn.textContent="⛶";
+    btn.title="Enter fullscreen";
+  }
+}
+document.addEventListener("fullscreenchange",()=>{
+  let btn=document.getElementById("fsBtn");
+  btn.textContent=document.fullscreenElement?"✕":"⛶";
+});
+
 function startGame(){
   document.querySelector(".title-screen").style.display="none";
   let u=new SpeechSynthesisUtterance(""); u.volume=0; speechSynthesis.speak(u);
   showScene("exterior","videoScene");
   let video=document.getElementById("hotelVideo");
-  function playWhenReady(v){
-    if(v.readyState>=3){ v.play(); }
-    else{
-      v.addEventListener("canplaythrough",function h(){ v.removeEventListener("canplaythrough",h); v.play(); },{once:true});
-      v.load();
-    }
-  }
-  video.muted = false;
-  playWhenReady(video);
+  video.muted=false;
+  video.volume=1;
+  // Play directly — we are inside a user gesture so audio is allowed
+  video.play().catch(()=>{
+    // Browser blocked audio — play muted first, then unmute
+    video.muted=true;
+    video.play().then(()=>{ video.muted=false; video.volume=1; }).catch(()=>{});
+  });
 }
 
 document.getElementById("hotelVideo").onended=function(){ transitionToLobby(); };
