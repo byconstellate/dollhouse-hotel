@@ -59,6 +59,53 @@ transition:background 0.2s;
 }
 button:hover{ background:rgba(255,0,255,0.15); }
 
+/* ENTER HOTEL — neon glow button */
+#enterBtn{
+padding:16px 54px;
+border-radius:50px;
+border:2px solid #ff44cc;
+background:rgba(8,0,12,0.55);
+color:#ffffff;
+font-family:"Courier New",monospace;
+font-size:17px;
+letter-spacing:4px;
+text-transform:uppercase;
+cursor:pointer;
+position:relative;
+overflow:hidden;
+box-shadow:
+  0 0 18px rgba(255,0,200,0.55),
+  0 0 40px rgba(255,0,200,0.25),
+  inset 0 0 14px rgba(255,0,200,0.1);
+animation:entryPulse 2.8s ease-in-out infinite;
+transition:box-shadow 0.3s, background 0.3s;
+backdrop-filter:blur(4px);
+-webkit-backdrop-filter:blur(4px);
+}
+#enterBtn::before{
+content:"";
+position:absolute;
+top:0; left:-100%;
+width:60%; height:100%;
+background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);
+animation:shimmer 3.2s ease-in-out infinite;
+}
+#enterBtn:hover{
+background:rgba(180,0,140,0.35);
+box-shadow:
+  0 0 30px rgba(255,0,200,0.9),
+  0 0 60px rgba(255,0,200,0.4),
+  inset 0 0 20px rgba(255,0,200,0.2);
+}
+@keyframes entryPulse{
+  0%,100%{ box-shadow:0 0 18px rgba(255,0,200,0.55),0 0 40px rgba(255,0,200,0.25),inset 0 0 14px rgba(255,0,200,0.1); }
+  50%{ box-shadow:0 0 28px rgba(255,0,200,0.85),0 0 70px rgba(255,0,200,0.4),inset 0 0 22px rgba(255,0,200,0.18); }
+}
+@keyframes shimmer{
+  0%{ left:-100%; }
+  60%,100%{ left:160%; }
+}
+
 /* NAME INPUT */
 .name-input{
 width:260px;
@@ -533,13 +580,13 @@ border-radius:8px;
 <div class="scene show" id="exterior">
   <img src="hotel-exterior.png" class="fullscreen">
   <div class="title-screen">
-    <button onclick="startGame()">Enter Hotel</button>
+    <button id="enterBtn" onclick="startGame()">✦ Enter Hotel ✦</button>
   </div>
 </div>
 
 <!-- ─── VIDEO ─────────────────────────────────── -->
 <div class="scene" id="videoScene">
-  <video id="hotelVideo" playsinline muted preload="auto">
+  <video id="hotelVideo" playsinline preload="auto">
     <source src="hotel-intro.mp4" type="video/mp4">
   </video>
 </div>
@@ -830,6 +877,7 @@ const angryDialogue = [
 const KEY_NAME     = "dollhouse_player_name";
 const KEY_MISSING  = "dollhouse_missing_ids_v3";
 const KEY_SESSION  = "dollhouse_session_v2"; // {date, notTodayIds, doneIds}
+const KEY_TRUST    = "dollhouse_trust_v1";
 
 // ═══════════════════════════════════════════════════
 //  GAME STATE
@@ -843,7 +891,15 @@ let shopIndex      = 0;    // current shop task index
 let currentTaskIndex = 0;
 let playerName     = "";
 
-let trust    = 50;
+function loadTrust(){
+  try{ let v=localStorage.getItem(KEY_TRUST); return v!==null?Math.max(0,Math.min(100,parseInt(v))):50; }
+  catch(e){ return 50; }
+}
+function saveTrust(){
+  try{ localStorage.setItem(KEY_TRUST, String(trust)); } catch(e){}
+}
+
+let trust    = loadTrust();
 let earnings = 0;
 
 let prevMoodTier = "neutral";
@@ -937,6 +993,7 @@ function addTrust(delta){
   let oldTier=getMoodTier();
   trust=Math.max(0,Math.min(100,trust+delta));
   let newTier=getMoodTier();
+  saveTrust();
   updateHUD();
   if(oldTier!==newTier) showMoodShiftBanner(newTier);
 }
@@ -1035,11 +1092,14 @@ function getVoice(type){
       ||gb[0]||en[0];
   }
   if(type==="boss"){
-    let exact=voices.find(v=>v.name==="Samantha");
-    if(exact) return exact;
-    let us=en.filter(v=>v.lang==="en-US");
-    return us.find(v=>v.name.toLowerCase().includes("samantha"))
-      ||us.find(v=>v.name.toLowerCase().includes("female"))
+    // Priority: Google US English (most natural on Chrome) → Samantha → any US female → any US → any EN
+    let googleUS=voices.find(v=>v.name==="Google US English");
+    if(googleUS) return googleUS;
+    let samantha=voices.find(v=>v.name==="Samantha");
+    if(samantha) return samantha;
+    let us=en.filter(v=>v.lang==="en-US"||v.lang.startsWith("en-US"));
+    return us.find(v=>v.name.toLowerCase().includes("female"))
+      ||us.find(v=>v.name.toLowerCase().includes("zira"))
       ||us[0]||en[0];
   }
 }
@@ -1051,8 +1111,10 @@ function speak(text,type,onDone){
     let speech=new SpeechSynthesisUtterance(text);
     let voice=getVoice(type);
     if(voice) speech.voice=voice;
-    if(type==="avatar"){ speech.pitch=1.8; speech.rate=1.05; }
-    if(type==="boss")  { speech.pitch=2.0; speech.rate=0.85; }
+    // Boss: high pitch (max 2.0), slightly brisk rate for a prim manager feel
+    // Avatar: very high pitch, natural pace
+    if(type==="avatar"){ speech.pitch=2.0; speech.rate=1.05; }
+    if(type==="boss")  { speech.pitch=2.0; speech.rate=0.95; }
     speech.volume=1;
     let rate=type==="boss"?0.85:1.05;
     let estMs=Math.max(3500,(text.length/5)*(60000/130)/rate)+2500;
