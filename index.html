@@ -1092,18 +1092,17 @@ function getVoice(type){
       ||gb[0]||en[0];
   }
   if(type==="boss"){
-    // Prefer en-US-Standard-F exactly
-    let standard=voices.find(v=>v.name==="en-US-Standard-F");
-    if(standard) return standard;
-    let ukFemale=voices.find(v=>v.name==="Google UK English Female");
-    if(ukFemale) return ukFemale;
-    let samantha=voices.find(v=>v.name==="Samantha");
-    if(samantha) return samantha;
-    let gb=en.filter(v=>v.lang==="en-GB"||v.lang.startsWith("en-GB"));
-    let gbFemale=gb.find(v=>v.name.toLowerCase().includes("female"))||gb[0];
-    if(gbFemale) return gbFemale;
+    // Try exact match first
+    let exact=voices.find(v=>v.name==="en-US-Standard-F");
+    if(exact) return exact;
+    // Fallback: any voice with Standard-F in the name
+    let standardF=voices.find(v=>v.name.includes("Standard-F"));
+    if(standardF) return standardF;
+    // Fallback: US female voices
     let us=en.filter(v=>v.lang==="en-US"||v.lang.startsWith("en-US"));
-    return us.find(v=>v.name.toLowerCase().includes("female"))||us[0]||en[0];
+    return us.find(v=>v.name.toLowerCase().includes("female"))
+      ||us.find(v=>v.name==="Samantha")
+      ||us[0]||en[0];
   }
 }
 

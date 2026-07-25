@@ -1,7 +1,5 @@
-const CACHE = "dollhouse-v3";
+const CACHE = "dollhouse-v4";
 const ASSETS = [
-  "./",
-  "./index.html",
   "./hotel-intro.mp4",
   "./hotel-exterior.png",
   "./hotel-lobby.png",
@@ -11,12 +9,10 @@ const ASSETS = [
   "./boss-talking.gif",
   "./image1_bottom.png",
   "./image2_bottom.png",
-  "./cleaning-supplies.png",
-  "./inventory.json",
-  "./tasks.json"
+  "./cleaning-supplies.png"
 ];
 
-// Pre-cache everything on install
+// Pre-cache media/images on install (NOT index.html — always fetch fresh)
 self.addEventListener("install", e => {
   e.waitUntil(
     caches.open(CACHE).then(cache => cache.addAll(ASSETS))
@@ -34,24 +30,26 @@ self.addEventListener("activate", e => {
   self.clients.claim();
 });
 
-// Cache-first for media/images, network-first for JSON (so task updates propagate)
 self.addEventListener("fetch", e => {
   const url = new URL(e.request.url);
+  const isHtml = url.pathname.endsWith(".html") || url.pathname.endsWith("/");
   const isJson = url.pathname.endsWith(".json");
 
-  if (isJson) {
-    // Network first, fall back to cache
+  if (isHtml || isJson) {
+    // Always network-first for HTML and JSON so updates propagate immediately
     e.respondWith(
       fetch(e.request)
         .then(res => {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
+          if (isJson) {
+            const clone = res.clone();
+            caches.open(CACHE).then(c => c.put(e.request, clone));
+          }
           return res;
         })
         .catch(() => caches.match(e.request))
     );
   } else {
-    // Cache first, fall back to network and cache the result
+    // Cache-first for media/images
     e.respondWith(
       caches.match(e.request).then(cached => {
         if (cached) return cached;
