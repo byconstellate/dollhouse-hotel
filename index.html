@@ -107,6 +107,56 @@ box-shadow:
   60%,100%{ left:160%; }
 }
 
+/* Video loading bar (shown on exterior while buffering) */
+#videoLoadWrap{
+  margin-top:14px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:5px;
+}
+#videoLoadLabel{
+  font-size:10px;
+  color:#ff88ff;
+  letter-spacing:2px;
+  opacity:0.75;
+  font-family:"Courier New",monospace;
+}
+#videoLoadTrack{
+  width:140px;
+  height:2px;
+  background:rgba(255,0,255,0.15);
+  border-radius:2px;
+  overflow:hidden;
+}
+#videoLoadFill{
+  height:100%;
+  background:#ff44cc;
+  border-radius:2px;
+  width:0%;
+  transition:width 0.4s ease;
+}
+
+/* Skip button shown while video is playing */
+#videoSkipBtn{
+  position:absolute;
+  bottom:22px;
+  right:24px;
+  z-index:50;
+  display:none;
+  background:rgba(8,0,12,0.72);
+  border:1px solid rgba(255,0,255,0.45);
+  border-radius:20px;
+  color:#ff88ff;
+  font-family:"Courier New",monospace;
+  font-size:11px;
+  padding:7px 20px;
+  letter-spacing:2px;
+  cursor:pointer;
+  backdrop-filter:blur(4px);
+}
+#videoSkipBtn:hover{ background:rgba(255,0,255,0.15); }
+
 /* NAME INPUT */
 .name-input{
 width:260px;
@@ -147,7 +197,7 @@ display:block;
 #avatarIdle{ mix-blend-mode:multiply; }
 #avatarTalking{ mix-blend-mode:multiply; }
 #bossIdle{ mix-blend-mode:screen; }
-#bossTalking{ display:none; transform:scale(0.95); transform-origin:bottom center; }
+#bossTalking{ display:none; transform:scale(1.03); transform-origin:bottom center; }
 .boss-position{
 right:8%;
 transform:translateX(500px);
@@ -610,6 +660,10 @@ border-radius:8px;
   <img src="hotel-exterior.png" class="fullscreen">
   <div class="title-screen">
     <button id="enterBtn" onclick="startGame()">✦ Enter Hotel ✦</button>
+    <div id="videoLoadWrap">
+      <div id="videoLoadLabel">LOADING</div>
+      <div id="videoLoadTrack"><div id="videoLoadFill"></div></div>
+    </div>
   </div>
 </div>
 
@@ -618,6 +672,7 @@ border-radius:8px;
   <video id="hotelVideo" playsinline preload="auto">
     <source src="hotel-intro.mp4" type="video/mp4">
   </video>
+  <button id="videoSkipBtn" onclick="skipVideo()">SKIP ▶</button>
 </div>
 
 <!-- ─── LOBBY ─────────────────────────────────── -->
@@ -795,6 +850,44 @@ border-radius:8px;
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js").catch(() => {});
 }
+
+// ── Pre-buffer the video immediately so it's ready when Enter is clicked ──
+(function(){
+  let vid=document.getElementById("hotelVideo");
+  // Trigger download right away (preload="auto" alone isn't always enough)
+  vid.load();
+
+  function updateBar(){
+    let pct=0;
+    try{
+      if(vid.buffered.length>0&&vid.duration>0){
+        pct=Math.min(100,Math.round(
+          (vid.buffered.end(vid.buffered.length-1)/vid.duration)*100
+        ));
+      }
+    }catch(e){}
+    let fill=document.getElementById("videoLoadFill");
+    let label=document.getElementById("videoLoadLabel");
+    if(!fill||!label) return;
+    fill.style.width=pct+"%";
+    if(pct>=100){
+      label.textContent="READY ✦";
+      label.style.color="#88ffcc";
+      label.style.opacity="1";
+    } else {
+      label.textContent="LOADING "+pct+"%";
+    }
+  }
+
+  vid.addEventListener("progress",updateBar);
+  vid.addEventListener("loadedmetadata",updateBar);
+  vid.addEventListener("canplaythrough",()=>{
+    let fill=document.getElementById("videoLoadFill");
+    let label=document.getElementById("videoLoadLabel");
+    if(fill) fill.style.width="100%";
+    if(label){ label.textContent="READY ✦"; label.style.color="#88ffcc"; label.style.opacity="1"; }
+  });
+})();
 
 // ═══════════════════════════════════════════════════
 //  DIALOGUE POOLS
@@ -1217,11 +1310,27 @@ function startGame(){
     video.muted=true;
     video.play().then(()=>{ video.muted=false; video.volume=1; }).catch(()=>{});
   });
+  // Show skip button after 4 seconds of video
+  setTimeout(()=>{
+    let skipBtn=document.getElementById("videoSkipBtn");
+    if(skipBtn) skipBtn.style.display="block";
+  },4000);
+}
+
+function skipVideo(){
+  let vid=document.getElementById("hotelVideo");
+  vid.pause();
+  document.getElementById("videoSkipBtn").style.display="none";
+  transitionToLobby();
 }
 
 document.getElementById("hotelVideo").onended=function(){ transitionToLobby(); };
 
 function transitionToLobby(){
+  // Hide skip button if still visible
+  let skipBtn=document.getElementById("videoSkipBtn");
+  if(skipBtn) skipBtn.style.display="none";
+
   let flash=document.getElementById("flash");
   flash.style.transition="opacity 1.4s ease";
   flash.style.opacity=1;
