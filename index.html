@@ -1092,7 +1092,9 @@ function getVoice(type){
       ||gb[0]||en[0];
   }
   if(type==="boss"){
-    // Prefer Google UK English Female — sounds like a proper hotel manager
+    // Prefer en-US-Standard-F exactly
+    let standard=voices.find(v=>v.name==="en-US-Standard-F");
+    if(standard) return standard;
     let ukFemale=voices.find(v=>v.name==="Google UK English Female");
     if(ukFemale) return ukFemale;
     let samantha=voices.find(v=>v.name==="Samantha");
