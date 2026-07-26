@@ -194,9 +194,7 @@ object-fit:contain;
 object-position:bottom center;
 display:block;
 }
-/* Apply blend mode at container level so transparent GIFs aren't affected by sibling compositing */
-.avatar-position{ mix-blend-mode:multiply; }
-.boss-position{ mix-blend-mode:screen; }
+/* Images are already transparent — no blend mode needed */
 #avatarIdle{}
 #avatarTalking{}
 #bossIdle{}
@@ -1684,11 +1682,8 @@ function reloadInventoryCheck(callback){
   ];
   let line=bossLines[Math.floor(Math.random()*bossLines.length)];
   document.getElementById("invCheckItemName").textContent=item.name;
-  document.getElementById("invCheckBody").textContent=item.category+(item.required?" · Required":" · Optional");
-  setBossDialogue("\u201c"+line+"\u201d");
-  document.getElementById("bossDialogue").style.display="block";
-  playTalking("bossTalking","bossIdle");
-  speak(line,"boss",()=>{ hideBossDialogue(); showPanel("invCheckPanel"); });
+  document.getElementById("invCheckBody").textContent="\u201c"+line+"\u201d";
+  showPanel("invCheckPanel");
 }
 
 
@@ -2151,11 +2146,8 @@ function maybeCheckInventory(taskIndex, callback){
   ];
   let line=bossLines[invAskIndex%bossLines.length];
   document.getElementById("invCheckItemName").textContent=item.name;
-  document.getElementById("invCheckBody").textContent=item.category+(item.required?" · Required":"· Optional");
-  setBossDialogue("\u201c"+line+"\u201d");
-  document.getElementById("bossDialogue").style.display="block";
-  playTalking("bossTalking","bossIdle");
-  speak(line,"boss",()=>{ hideBossDialogue(); showPanel("invCheckPanel"); });
+  document.getElementById("invCheckBody").textContent="\u201c"+line+"\u201d";
+  showPanel("invCheckPanel");
 }
 
 function invCheckYes(){
