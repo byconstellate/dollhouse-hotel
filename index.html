@@ -194,11 +194,11 @@ object-fit:contain;
 object-position:bottom center;
 display:block;
 }
-#avatarIdle{ mix-blend-mode:multiply; }
-#avatarTalking{ mix-blend-mode:multiply; }
+#avatarIdle{}
+#avatarTalking{}
 #bossIdle{ mix-blend-mode:screen; }
-.avatar-position{ mix-blend-mode:multiply; isolation:auto; }
-#bossTalking{ display:none; transform:scale(0.95); transform-origin:bottom center; }
+.avatar-position{}
+#bossTalking{ display:none; transform-origin:bottom center; }
 .boss-position{
 right:8%;
 transform:translateX(500px);
@@ -461,7 +461,7 @@ gap:10px;
 justify-content:center;
 flex-wrap:wrap;
 }
-#taskCardPanel .panel-footer button{ min-width:155px; flex:1 1 155px; padding:14px 16px; font-size:16px; }
+#taskCardPanel .panel-footer button{ min-width:130px; flex:1 1 130px; padding:12px 14px; font-size:15px; }
 .order-body{ font-size:13px; text-align:center; line-height:1.7; margin-bottom:10px; color:#ffddff; }
 .missing-list{
 margin:10px 0;
@@ -772,9 +772,7 @@ border-radius:8px;
     <button onclick="markTaskDone()">✓ Mark as Done</button>
     <button class="btn-later" onclick="doItLater()">⏱ Do it Later</button>
     <button class="btn-skip" onclick="notToday()">✗ Not Today</button>
-  </div>
-  <div style="text-align:center;margin-top:8px;">
-    <button class="btn-nomats" id="noMatsBtn" onclick="noMaterials()" style="display:none">⚠ I don't have the supplies</button>
+    <button class="btn-nomats" id="noMatsBtn" onclick="noMaterials()" style="display:none">⚠ No supplies</button>
   </div>
 </div>
 
@@ -822,6 +820,17 @@ border-radius:8px;
   <div class="panel-footer">
     <button class="btn-accept" onclick="buyNowYes()">✓ Order Now</button>
     <button class="btn-refuse" onclick="buyNowNo()">✗ No — Skip Task</button>
+  </div>
+</div>
+
+<!-- ═══════ PANEL: INVENTORY ITEM CHECK (scattered through tasks) ═══════ -->
+<div class="panel" id="invCheckPanel">
+  <div class="panel-title">✦ SUPPLY CHECK ✦</div>
+  <div class="order-body" id="invCheckBody"></div>
+  <div class="buy-item-name" id="invCheckItemName"></div>
+  <div class="panel-footer">
+    <button class="btn-accept" onclick="invCheckYes()">✓ Yes, I have it</button>
+    <button class="btn-refuse" onclick="invCheckNo()">✗ No, I don't</button>
   </div>
 </div>
 
@@ -1048,6 +1057,26 @@ let noMatsTask     = null;
 // Extra items state
 let extraItemsFromPanel = []; // items confirmed bought in extra panel
 
+// Scattered inventory check state
+let invAskQueue    = [];   // shuffled list of inventory items to ask about
+let invAskIndex    = 0;
+let invAskCallback = null;
+let invAskedIds    = new Set(); // items asked this session (resets on page load)
+
+// Session earnings (today only, separate from cumulative)
+const KEY_SESSION_EARNINGS = "dollhouse_session_earnings_v1";
+let sessionEarnings = 0;
+function loadSessionEarnings(){
+  try{
+    let d=JSON.parse(localStorage.getItem(KEY_SESSION_EARNINGS)||"{}");
+    if(d.date===getTodayString()) return d.amount||0;
+    return 0;
+  } catch(e){ return 0; }
+}
+function saveSessionEarnings(){
+  try{ localStorage.setItem(KEY_SESSION_EARNINGS,JSON.stringify({date:getTodayString(),amount:sessionEarnings})); } catch(e){}
+}
+
 // ═══════════════════════════════════════════════════
 //  HELPERS — STORAGE
 // ═══════════════════════════════════════════════════
@@ -1103,7 +1132,14 @@ Promise.all([
   shuffle(happyDialogue);
   shuffle(neutralDialogue);
   shuffle(angryDialogue);
+  // Build scattered inventory check queue (all items, shuffled)
+  invAskQueue=[...inventoryData];
+  shuffle(invAskQueue);
+  invAskIndex=0;
 });
+
+// Load today's session earnings
+sessionEarnings=loadSessionEarnings();
 
 function shuffle(arr){
   for(let i=arr.length-1;i>0;i--){
@@ -1129,7 +1165,7 @@ function addTrust(delta){
   updateHUD();
   if(oldTier!==newTier) showMoodShiftBanner(newTier);
 }
-function addEarnings(amount){ earnings+=amount; saveEarnings(); updateHUD(); }
+function addEarnings(amount){ earnings+=amount; sessionEarnings+=amount; saveEarnings(); saveSessionEarnings(); updateHUD(); }
 function taskEarnings(task){
   let base=[0,5,12,20][task.difficulty]||5;
   if(task.type==="Luxury") base+=5;
@@ -1222,19 +1258,27 @@ function getVoice(type){
       ||gb[0]||en[0];
   }
   if(type==="boss"){
-    // Preferred: Google US English (Chrome built-in female US voice)
+    // Prefer Google UK English Female — sounds most natural and authoritative
+    let googleUK=voices.find(v=>v.name==="Google UK English Female");
+    if(googleUK) return googleUK;
+    // Chrome: Google US English
     let googleUS=voices.find(v=>v.name==="Google US English");
     if(googleUS) return googleUS;
-    // macOS: Samantha is a clear US female voice
+    // macOS enhanced voices — much more realistic
+    let kate=voices.find(v=>v.name==="Kate");
+    if(kate) return kate;
+    let serena=voices.find(v=>v.name==="Serena");
+    if(serena) return serena;
     let samantha=voices.find(v=>v.name==="Samantha");
     if(samantha) return samantha;
-    // Windows: Microsoft Zira is a US female voice
+    // Windows: Microsoft Zira or Hazel
+    let hazel=voices.find(v=>v.name.includes("Hazel"));
+    if(hazel) return hazel;
     let zira=voices.find(v=>v.name.includes("Zira"));
     if(zira) return zira;
-    // Any US voice with "female" in the name
-    let us=en.filter(v=>v.lang==="en-US"||v.lang.startsWith("en-US"));
-    return us.find(v=>v.name.toLowerCase().includes("female"))
-      ||us[0]||en[0];
+    // Any UK voice
+    let gb=en.filter(v=>v.lang==="en-GB"||v.lang.startsWith("en-GB"));
+    return gb[0]||en[0];
   }
 }
 
@@ -1247,8 +1291,8 @@ function speak(text,type,onDone){
     if(voice) speech.voice=voice;
     // Boss: high pitch (max 2.0), slightly brisk rate for a prim manager feel
     // Avatar: very high pitch, natural pace
-    if(type==="avatar"){ speech.pitch=1.25; speech.rate=1.0; }
-    if(type==="boss")  { speech.pitch=1.5;  speech.rate=0.9; }
+    if(type==="avatar"){ speech.pitch=1.1; speech.rate=1.0; }
+    if(type==="boss")  { speech.pitch=1.1; speech.rate=0.88; }
     speech.volume=1;
     let rate=type==="boss"?0.85:1.05;
     let estMs=Math.max(3500,(text.length/5)*(60000/130)/rate)+2500;
@@ -1393,11 +1437,11 @@ function submitName(){
   savePlayerName(n);
   playerName=n;
   showPanel(null);
-  let line=`${n}! What a lovely name. Now, before anything else, I need you to take a full inventory of your cleaning supplies. Mark off anything you don't have with you today.`;
+  let line=`${n}! What a lovely name. Welcome to The Dollhouse Hotel. Let's go through today's tasks together — I'll check in on your supplies as we go.`;
   setBossDialogue("\u201c"+line+"\u201d");
   document.getElementById("bossDialogue").style.display="block";
   playTalking("bossTalking","bossIdle");
-  speak(line,"boss",()=>{ setTimeout(()=>openInventoryPanel(),600); });
+  speak(line,"boss",()=>{ setTimeout(()=>bossTasksPrompt(),600); });
 }
 
 // Enter key on name input
@@ -1406,7 +1450,7 @@ document.getElementById("nameInput").addEventListener("keydown",function(e){
 });
 
 
-// ─── RETURNING FLOW (skip inventory) ───────────────
+// ─── RETURNING FLOW (skip inventory + skip tasks checklist) ────
 function returningFlow(){
   // Load missing items from storage
   let savedIds=loadSavedMissingIds();
@@ -1416,8 +1460,18 @@ function returningFlow(){
   shopQueue=missingItems.filter(i=>i.required);
   shopIndex=0;
 
+  // Build task list from session data (skip already done/not-today)
+  let session=getSessionData();
+  let doneSet=new Set(session.doneIds||[]);
+  let notTodaySet=new Set(session.notTodayIds||[]);
+  incompleteTasks=tasksData.filter(t=>!doneSet.has(t.id)&&!notTodaySet.has(t.id));
+  currentTaskIndex=0;
+
   hideBossDialogue();
-  bossTasksPrompt();
+  // Go straight to tasks — no checklist panel for returning players
+  if(incompleteTasks.length===0 && shopQueue.length===0) allTasksDone();
+  else if(shopQueue.length>0) runShopTaskQueue();
+  else bossAssignFirst();
 }
 
 
@@ -1853,6 +1907,64 @@ function cancelExtraItems(){
 
 
 // ═══════════════════════════════════════════════════
+//  SCATTERED INVENTORY CHECKS (between tasks)
+// ═══════════════════════════════════════════════════
+function maybeCheckInventory(taskIndex, callback){
+  // Ask about one inventory item every 3 tasks (skip first task)
+  if(taskIndex===0 || taskIndex%3!==0){
+    callback(); return;
+  }
+  // Find next unasked item
+  while(invAskIndex<invAskQueue.length && invAskedIds.has(invAskQueue[invAskIndex].id)){
+    invAskIndex++;
+  }
+  if(invAskIndex>=invAskQueue.length){ callback(); return; }
+
+  let item=invAskQueue[invAskIndex];
+  invAskIndex++;
+  invAskedIds.add(item.id);
+  invAskCallback=callback;
+
+  let bossLines=[
+    `Quick question while I have you — do you have ${item.name} with you today?`,
+    `By the way, ${item.name} — do you have that?`,
+    `Before your next task, do you have ${item.name}?`,
+    `I wanted to check — ${item.name}. Is that in your kit today?`
+  ];
+  let line=bossLines[invAskIndex%bossLines.length];
+  document.getElementById("invCheckItemName").textContent=item.name;
+  document.getElementById("invCheckBody").textContent=item.category+(item.required?" · Required":"· Optional");
+  setBossDialogue("\u201c"+line+"\u201d");
+  document.getElementById("bossDialogue").style.display="block";
+  playTalking("bossTalking","bossIdle");
+  speak(line,"boss",()=>{ hideBossDialogue(); showPanel("invCheckPanel"); });
+}
+
+function invCheckYes(){
+  showPanel(null);
+  let item=invAskQueue[invAskIndex-1];
+  // If was previously flagged missing, clear it
+  if(missingItems.some(m=>m.id===item.id)){
+    missingItems=missingItems.filter(m=>m.id!==item.id);
+    saveMissingIds(missingItems.map(i=>i.id));
+    addTrust(2);
+  }
+  if(invAskCallback){ let cb=invAskCallback; invAskCallback=null; cb(); }
+}
+
+function invCheckNo(){
+  showPanel(null);
+  let item=invAskQueue[invAskIndex-1];
+  // Add to missing if not already there
+  if(!missingItems.some(m=>m.id===item.id)){
+    missingItems.push(item);
+    saveMissingIds(missingItems.map(i=>i.id));
+    if(item.required) addTrust(-2);
+  }
+  if(invAskCallback){ let cb=invAskCallback; invAskCallback=null; cb(); }
+}
+
+// ═══════════════════════════════════════════════════
 //  STAGE 5 — TASK ASSIGNMENT
 // ═══════════════════════════════════════════════════
 function bossAssignFirst(){
@@ -1880,6 +1992,17 @@ function showTaskCard(index){
     return;
   }
 
+  // Every 3 tasks, scatter a supply check question
+  if(index>0 && index%3===0){
+    maybeCheckInventory(index,()=>_showTaskCardInner(index));
+    return;
+  }
+
+  _showTaskCardInner(index);
+}
+
+function _showTaskCardInner(index){
+  if(index>=incompleteTasks.length){ allTasksDone(); return; }
   let task=incompleteTasks[index];
   let total=incompleteTasks.length;
   document.getElementById("taskProgress").textContent=`Task ${index+1} of ${total}`;
@@ -2138,7 +2261,7 @@ function allTasksDone(){
     hideBossDialogue();
     setTimeout(()=>{
       let t=getMoodTier();
-      document.getElementById("allDoneTotal").textContent="£"+earnings+" earned today";
+      document.getElementById("allDoneTotal").textContent="£"+sessionEarnings+" earned today";
       document.getElementById("allDoneTrust").textContent=
         t==="happy"?"💗 Manager mood: Happy · Trust "+trust+"/100"
         :t==="neutral"?"😐 Manager mood: Neutral · Trust "+trust+"/100"
