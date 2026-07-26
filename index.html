@@ -197,7 +197,8 @@ display:block;
 #avatarIdle{ mix-blend-mode:multiply; }
 #avatarTalking{ mix-blend-mode:multiply; }
 #bossIdle{ mix-blend-mode:screen; }
-#bossTalking{ display:none; transform:scale(1.03); transform-origin:bottom center; }
+.avatar-position{ mix-blend-mode:multiply; isolation:auto; }
+#bossTalking{ display:none; transform:scale(0.95); transform-origin:bottom center; }
 .boss-position{
 right:8%;
 transform:translateX(500px);
@@ -460,6 +461,7 @@ gap:10px;
 justify-content:center;
 flex-wrap:wrap;
 }
+#taskCardPanel .panel-footer button{ min-width:155px; flex:1 1 155px; padding:14px 16px; font-size:16px; }
 .order-body{ font-size:13px; text-align:center; line-height:1.7; margin-bottom:10px; color:#ffddff; }
 .missing-list{
 margin:10px 0;
@@ -1000,6 +1002,7 @@ const KEY_NAME     = "dollhouse_player_name";
 const KEY_MISSING  = "dollhouse_missing_ids_v3";
 const KEY_SESSION  = "dollhouse_session_v2"; // {date, notTodayIds, doneIds}
 const KEY_TRUST    = "dollhouse_trust_v1";
+const KEY_EARNINGS  = "dollhouse_earnings_v1";
 
 // ═══════════════════════════════════════════════════
 //  GAME STATE
@@ -1020,9 +1023,16 @@ function loadTrust(){
 function saveTrust(){
   try{ localStorage.setItem(KEY_TRUST, String(trust)); } catch(e){}
 }
+function loadEarnings(){
+  try{ let v=localStorage.getItem(KEY_EARNINGS); return v!==null?parseInt(v):0; }
+  catch(e){ return 0; }
+}
+function saveEarnings(){
+  try{ localStorage.setItem(KEY_EARNINGS, String(earnings)); } catch(e){}
+}
 
 let trust    = loadTrust();
-let earnings = 0;
+let earnings = loadEarnings();
 
 let prevMoodTier = "neutral";
 let dialogueIndices = { happy:0, neutral:0, angry:0 };
@@ -1119,7 +1129,7 @@ function addTrust(delta){
   updateHUD();
   if(oldTier!==newTier) showMoodShiftBanner(newTier);
 }
-function addEarnings(amount){ earnings+=amount; updateHUD(); }
+function addEarnings(amount){ earnings+=amount; saveEarnings(); updateHUD(); }
 function taskEarnings(task){
   let base=[0,5,12,20][task.difficulty]||5;
   if(task.type==="Luxury") base+=5;
@@ -1238,7 +1248,7 @@ function speak(text,type,onDone){
     // Boss: high pitch (max 2.0), slightly brisk rate for a prim manager feel
     // Avatar: very high pitch, natural pace
     if(type==="avatar"){ speech.pitch=1.25; speech.rate=1.0; }
-    if(type==="boss")  { speech.pitch=1.0;  speech.rate=0.9; }
+    if(type==="boss")  { speech.pitch=1.5;  speech.rate=0.9; }
     speech.volume=1;
     let rate=type==="boss"?0.85:1.05;
     let estMs=Math.max(3500,(text.length/5)*(60000/130)/rate)+2500;
@@ -1879,6 +1889,11 @@ function showTaskCard(index){
     ?"You'll need: "+task.requiredItems.join(", "):"";
   document.getElementById("taskItems").textContent=items;
 
+  // Lazy-reload missingItems if inventoryData is now available but missingItems was empty at flow start
+  if(missingItems.length===0 && inventoryData.length>0){
+    let _sids=loadSavedMissingIds();
+    if(_sids.length>0) missingItems=inventoryData.filter(i=>_sids.includes(i.id));
+  }
   // Show "no materials" button only if task has required items in missing list
   let noMatsBtn=document.getElementById("noMatsBtn");
   let hasMissingMats=task.requiredItems&&task.requiredItems.some(ri=>
