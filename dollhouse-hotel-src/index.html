@@ -14,7 +14,7 @@ background:black;
 font-family:"Courier New",monospace;
 }
 
-.scene{
+.scene{ isolation:isolate;
 position:absolute;
 inset:0;
 opacity:0;
@@ -2277,9 +2277,9 @@ function markTaskDone(){
   showRewardNotif(earned,trustGain);
   markDoneToday(task.id);
 
-  let confirmLines=["Done! What's next?","All done. On to the next one!","Complete! Ready for the next task.","Finished! What else needs doing?","Done and dusted!","That's taken care of.","All sorted!","Moving on!"];
-  if(bonus) confirmLines=[bonus.label+" — "+confirmLines[0],...confirmLines];
-  let line=confirmLines[currentTaskIndex%confirmLines.length];
+  let confirmLines=["Done! What's next?","All finished!","Finished that one.","Task complete.","Done and dusted.","That's sorted.","Completed.","Everything's looking good here.","Ready for the next assignment.","What's next on today's list?","That room's guest ready.","Another one's finished.","Done! Send me to the next room.","One more checked off.","Everything's sparkling now.","That's looking much better.","Finished! What's the next job?","Job done.","The room's ready for guests.","Mission accomplished.","That should impress the guests.","Looks perfect now.","I've finished here.","Ready for another task.","That was satisfying.","Another room restored.","The hotel's looking better already.","I've done everything on this task.","Finished! Where am I heading next?","On to the next one!","Done! I think the guests will love this.","Everything's in place now.","This room's officially complete.","That's another five-star room.","The transformation is complete.","Everything's spotless.","I've wrapped that one up.","All taken care of.","The room is looking beautiful now.","Another successful task completed.","Ready whenever you are.","That one's off the checklist.","Everything's exactly where it should be.","One step closer to restoring the hotel.","Nothing left to do here.","Finished! Let's keep going.","The hotel's coming back to life.","Done! Next challenge?","I'm ready for my next assignment.","Shift's going well so far."];
+  if(bonus) confirmLines=[bonus.label+" — Done!","Speedy finish — "+bonus.label+"!","On time and everything — "+bonus.label+"!",...confirmLines];
+  let line=confirmLines[Math.floor(Math.random()*confirmLines.length)];
   setAvatarDialogue("\u201c"+line+"\u201d");
   document.getElementById("avatarDialogue").style.display="block";
   playTalking("avatarTalking","avatarIdle");
