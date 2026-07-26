@@ -1365,8 +1365,32 @@ function startGame(){
   document.querySelector(".title-screen").style.display="none";
   // Warm up speech synthesis inside the user gesture
   let u=new SpeechSynthesisUtterance(""); u.volume=0; speechSynthesis.speak(u);
-  // Skip the intro video — go straight to lobby
-  transitionToLobby();
+
+  // If the hotel is clean (<20 tasks left), skip the walk-in animation
+  let session=getSessionData();
+  let doneSet=new Set(session.doneIds||[]);
+  let notTodaySet=new Set(session.notTodayIds||[]);
+  let remaining=tasksData.length>0
+    ? tasksData.filter(t=>!doneSet.has(t.id)&&!notTodaySet.has(t.id)).length
+    : 999;
+  if(remaining<20){
+    transitionToLobby();
+    return;
+  }
+
+  // Dirty hotel — play the full walk-in animation
+  showScene("exterior","videoScene");
+  let video=document.getElementById("hotelVideo");
+  video.muted=false;
+  video.volume=1;
+  video.play().catch(()=>{
+    video.muted=true;
+    video.play().then(()=>{ video.muted=false; video.volume=1; }).catch(()=>{});
+  });
+  setTimeout(()=>{
+    let skipBtn=document.getElementById("videoSkipBtn");
+    if(skipBtn) skipBtn.style.display="block";
+  },4000);
 }
 
 function skipVideo(){
