@@ -1139,6 +1139,16 @@ Promise.all([
   invAskQueue=[...inventoryData];
   shuffle(invAskQueue);
   invAskIndex=0;
+
+  // Swap to "clean hotel" images when fewer than 20 tasks remain
+  let session=getSessionData();
+  let doneSet=new Set(session.doneIds||[]);
+  let notTodaySet=new Set(session.notTodayIds||[]);
+  let remaining=tasksData.filter(t=>!doneSet.has(t.id)&&!notTodaySet.has(t.id)).length;
+  if(remaining<20){
+    document.querySelector("#exterior img.fullscreen").src="clean-exterior.png";
+    document.querySelector("#lobby img.fullscreen").src="clean-interior.png";
+  }
 });
 
 // Load today's session earnings
@@ -1353,22 +1363,10 @@ document.addEventListener("fullscreenchange",()=>{
 
 function startGame(){
   document.querySelector(".title-screen").style.display="none";
+  // Warm up speech synthesis inside the user gesture
   let u=new SpeechSynthesisUtterance(""); u.volume=0; speechSynthesis.speak(u);
-  showScene("exterior","videoScene");
-  let video=document.getElementById("hotelVideo");
-  video.muted=false;
-  video.volume=1;
-  // Play directly — we are inside a user gesture so audio is allowed
-  video.play().catch(()=>{
-    // Browser blocked audio — play muted first, then unmute
-    video.muted=true;
-    video.play().then(()=>{ video.muted=false; video.volume=1; }).catch(()=>{});
-  });
-  // Show skip button after 4 seconds of video
-  setTimeout(()=>{
-    let skipBtn=document.getElementById("videoSkipBtn");
-    if(skipBtn) skipBtn.style.display="block";
-  },4000);
+  // Skip the intro video — go straight to lobby
+  transitionToLobby();
 }
 
 function skipVideo(){
