@@ -195,9 +195,11 @@ object-position:bottom center;
 display:block;
 }
 
-/* Both images have transparent backgrounds — drop-shadow makes avatar visible on dark lobby */
+/* Idle PNG has true transparency — drop-shadow makes avatar pop against dark lobby */
 #avatarIdle{ filter: drop-shadow(0 0 8px rgba(255,160,220,0.35)); }
-#avatarTalking{ filter: drop-shadow(0 0 8px rgba(255,160,220,0.35)); }
+/* Talking GIF has white frame pixels not covered by GIF transparency mask;
+   multiply blends them away against the dark lobby without affecting the character */
+#avatarTalking{ mix-blend-mode:multiply; filter: drop-shadow(0 0 8px rgba(255,160,220,0.35)); }
 #bossIdle{}
 #bossTalking{ display:none; transform-origin:bottom center; }
 .boss-position{
