@@ -1557,6 +1557,8 @@ function startGame(){
 function skipVideo(){
   let vid=document.getElementById("hotelVideo");
   vid.pause();
+  vid.muted=true;
+  vid.currentTime=0;
   document.getElementById("videoSkipBtn").style.display="none";
   transitionToLobby();
 }
