@@ -194,10 +194,12 @@ object-fit:contain;
 object-position:bottom center;
 display:block;
 }
-/* multiply makes the white PNG background transparent on the dark lobby */
-#avatarIdle{ mix-blend-mode:multiply; }
-#avatarTalking{ mix-blend-mode:multiply; }
-#bossIdle{ mix-blend-mode:screen; }
+/* Apply blend mode at container level so transparent GIFs aren't affected by sibling compositing */
+.avatar-position{ mix-blend-mode:multiply; }
+.boss-position{ mix-blend-mode:screen; }
+#avatarIdle{}
+#avatarTalking{}
+#bossIdle{}
 .avatar-position{}
 #bossTalking{ display:none; transform-origin:bottom center; }
 .boss-position{
@@ -348,6 +350,25 @@ font-size:13px;
 color:#88ffcc;
 letter-spacing:1px;
 }
+
+/* ═══════════════════ TASK TIMER ═══════════════════ */
+#taskTimer{
+  text-align:center;
+  font-size:22px;
+  letter-spacing:3px;
+  color:#ff88ff;
+  margin:6px 0 2px;
+  font-family:"Courier New",monospace;
+}
+.timer-bonus-hint{
+  text-align:center;
+  font-size:10px;
+  color:#aa88aa;
+  letter-spacing:1px;
+  margin-bottom:4px;
+}
+.timer-speedy{ color:#88ffcc !important; }
+.timer-deep{   color:#ffcc44 !important; }
 
 /* ═══════════════════ TASK REWARD NOTIFICATION ═══════════════════ */
 #rewardNotif{
@@ -799,6 +820,8 @@ border-radius:8px;
   <div class="task-room-label" id="taskRoom"></div>
   <div class="task-name" id="taskName"></div>
   <div class="task-items" id="taskItems"></div>
+  <div id="taskTimer">00:00</div>
+  <div class="timer-bonus-hint" id="taskTimerHint">⚡ 1–5 min: Speedy Bonus &nbsp;|&nbsp; ⭐ 30+ min: Deep Clean Bonus</div>
   <div class="panel-footer">
     <button onclick="markTaskDone()">✓ Mark as Done</button>
     <button class="btn-later" onclick="doItLater()">⏱ Do it Later</button>
@@ -934,6 +957,65 @@ if ("serviceWorker" in navigator) {
 // ═══════════════════════════════════════════════════
 //  DIALOGUE POOLS
 // ═══════════════════════════════════════════════════
+
+const purchaseResponses = [
+"Excellent. That's exactly the kind of initiative I expect.",
+"Wonderful choice. I think that'll serve you well.",
+"Very nice. Every improvement makes a difference.",
+"I had a feeling you'd pick that one.",
+"Splendid decision. The hotel will thank you for it.",
+"A wise investment. I approve.",
+"Good thinking. You're beginning to understand what this hotel needs.",
+"I like your eye for detail.",
+"Lovely choice. That's going to look beautiful.",
+"Perfect. Quality always pays off.",
+"Well chosen.",
+"I couldn't have picked better myself.",
+"That should make today's tasks much easier.",
+"Excellent work. You're planning ahead.",
+"Smart decision.",
+"I appreciate someone who prepares properly.",
+"That's exactly what I'd recommend.",
+"Beautiful choice.",
+"Very professional.",
+"Your standards are improving.",
+"The hotel is becoming more elegant already.",
+"Our guests will notice the difference.",
+"I like your dedication.",
+"Another step towards a five-star hotel.",
+"Now that's initiative.",
+"I can see you're taking this seriously.",
+"That's money well spent.",
+"An excellent addition to your toolkit.",
+"You've got good instincts.",
+"Wonderful. Keep making choices like that.",
+"I've been hoping someone would purchase that.",
+"That'll certainly come in handy.",
+"The right tools make all the difference.",
+"I think you'll enjoy using that.",
+"Every upgrade brings us closer to perfection.",
+"Very impressive.",
+"You're becoming quite the professional housekeeper.",
+"Keep this up and we'll have the finest hotel in town.",
+"I admire your commitment.",
+"Excellent. I knew I could rely on your judgement.",
+"Nicely done.",
+"I have a good feeling about that purchase.",
+"Another thoughtful decision.",
+"The Dollhouse Hotel is in capable hands.",
+"Your guests will appreciate that.",
+"That's exactly the sort of improvement we like to see.",
+"I'm pleased with that choice.",
+"You're building something special here.",
+"Keep investing in quality. It always shows.",
+"Fantastic. Let's put it to good use."
+];
+let purchaseResponseIndex = 0;
+function getPurchaseResponse(){
+  let r = purchaseResponses[purchaseResponseIndex % purchaseResponses.length];
+  purchaseResponseIndex++;
+  return r;
+}
 
 const happyDialogue = [
 "Good morning, sweetheart! It's lovely to see you back at the Dollhouse Hotel. Every room seems a little brighter when you're here. We have a few guests arriving soon, so could you {task}? I know you'll make it absolutely beautiful.",
@@ -1081,6 +1163,57 @@ let dialogueIndices = { happy:0, neutral:0, angry:0 };
 let buyCheckQueue  = [];
 let buyCheckIndex  = 0;
 let afterBuyCheckCb = null;
+
+// ── Task timer ──────────────────────────────────────
+let taskStartTime     = null;
+let taskTimerInterval = null;
+
+function startTaskTimer(){
+  taskStartTime = Date.now();
+  clearInterval(taskTimerInterval);
+  let el = document.getElementById("taskTimer");
+  let hint = document.getElementById("taskTimerHint");
+  if(el){ el.textContent="00:00"; el.className=""; }
+  taskTimerInterval = setInterval(()=>{
+    if(!taskStartTime) return;
+    let secs = Math.floor((Date.now()-taskStartTime)/1000);
+    let m = Math.floor(secs/60);
+    let s = secs%60;
+    let display = String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+    if(el) el.textContent = display;
+    // Colour + hint based on time bucket
+    if(secs>=1800){
+      if(el) el.className="timer-deep";
+      if(hint) hint.textContent="⭐ DEEP CLEAN BONUS UNLOCKED — keep going!";
+    } else if(secs>=300){
+      if(el) el.className="";
+      if(hint) hint.textContent="⚡ 1–5 min: Speedy Bonus  |  ⭐ 30+ min: Deep Clean Bonus";
+    } else if(secs>=60){
+      if(el) el.className="timer-speedy";
+      if(hint) hint.textContent="⚡ SPEEDY BONUS ACTIVE — finish before 5 min!";
+    } else {
+      if(el) el.className="timer-speedy";
+      if(hint) hint.textContent="⚡ SPEEDY BONUS ACTIVE — finish before 5 min!";
+    }
+  }, 1000);
+}
+
+function stopTaskTimer(){
+  clearInterval(taskTimerInterval);
+  taskTimerInterval = null;
+  let elapsed = taskStartTime ? Math.floor((Date.now()-taskStartTime)/1000) : 0;
+  taskStartTime = null;
+  return elapsed; // seconds
+}
+
+function getTimerBonus(elapsedSecs){
+  if(elapsedSecs>=1 && elapsedSecs<=300){
+    return { money:10, trust:3, label:"⚡ SPEEDY BONUS +£10" };
+  } else if(elapsedSecs>=1800){
+    return { money:20, trust:5, label:"⭐ DEEP CLEAN BONUS +£20" };
+  }
+  return null;
+}
 
 // No-materials task reference
 let noMatsTask     = null;
@@ -1516,6 +1649,7 @@ function returningFlow(){
   let doneSet=new Set(session.doneIds||[]);
   let notTodaySet=new Set(session.notTodayIds||[]);
   incompleteTasks=tasksData.filter(t=>!doneSet.has(t.id)&&!notTodaySet.has(t.id));
+  shuffle(incompleteTasks);
   currentTaskIndex=0;
 
   hideBossDialogue();
@@ -1789,6 +1923,7 @@ function tasksChecklistDone(){
 
   // Build incomplete tasks, excluding done and not-today
   incompleteTasks=tasksData.filter(t=>!doneIds.has(t.id)&&!notTodaySet.has(t.id));
+  shuffle(incompleteTasks);
   currentTaskIndex=0;
   showPanel(null);
   if(incompleteTasks.length===0 && shopQueue.length===0) allTasksDone();
@@ -1851,7 +1986,7 @@ function shopBought(){
   playTalking("avatarTalking","avatarIdle");
   speak(line,"avatar",()=>{
     hideAvatarDialogue();
-    let bossLine="Excellent. That's exactly the kind of initiative I expect.";
+    let bossLine=getPurchaseResponse();
     setBossDialogue("\u201c"+bossLine+"\u201d");
     document.getElementById("bossDialogue").style.display="block";
     playTalking("bossTalking","bossIdle");
@@ -2024,13 +2159,23 @@ function maybeCheckInventory(taskIndex, callback){
 function invCheckYes(){
   showPanel(null);
   let item=invAskQueue[invAskIndex-1];
-  // If was previously flagged missing, clear it
-  if(missingItems.some(m=>m.id===item.id)){
+  let wasMissing=missingItems.some(m=>m.id===item.id);
+  if(wasMissing){
     missingItems=missingItems.filter(m=>m.id!==item.id);
     saveMissingIds(missingItems.map(i=>i.id));
     addTrust(2);
+    // Congratulate — item was previously missing and they bought it
+    let bossLine=getPurchaseResponse();
+    setBossDialogue("\u201c"+bossLine+"\u201d");
+    document.getElementById("bossDialogue").style.display="block";
+    playTalking("bossTalking","bossIdle");
+    speak(bossLine,"boss",()=>{
+      hideBossDialogue();
+      if(invAskCallback){ let cb=invAskCallback; invAskCallback=null; cb(); }
+    });
+  } else {
+    if(invAskCallback){ let cb=invAskCallback; invAskCallback=null; cb(); }
   }
-  if(invAskCallback){ let cb=invAskCallback; invAskCallback=null; cb(); }
 }
 
 function invCheckNo(){
@@ -2108,6 +2253,7 @@ function _showTaskCardInner(index){
   hideBossDialogue();
   hideAvatarDialogue();
   showPanel("taskCardPanel");
+  startTaskTimer();
 
   if(index>0){
     let line=getMoodDialogue(task);
@@ -2120,29 +2266,47 @@ function _showTaskCardInner(index){
 
 function markTaskDone(){
   showPanel(null);
+  let elapsed=stopTaskTimer();
   let task=incompleteTasks[currentTaskIndex];
   let earned=taskEarnings(task);
   let trustGain=task.type==="Luxury"?3:2;
+  let bonus=getTimerBonus(elapsed);
+  if(bonus){ earned+=bonus.money; trustGain+=bonus.trust; }
   addEarnings(earned);
   addTrust(trustGain);
   showRewardNotif(earned,trustGain);
   markDoneToday(task.id);
 
   let confirmLines=["Done! What's next?","All done. On to the next one!","Complete! Ready for the next task.","Finished! What else needs doing?","Done and dusted!","That's taken care of.","All sorted!","Moving on!"];
+  if(bonus) confirmLines=[bonus.label+" — "+confirmLines[0],...confirmLines];
   let line=confirmLines[currentTaskIndex%confirmLines.length];
   setAvatarDialogue("\u201c"+line+"\u201d");
   document.getElementById("avatarDialogue").style.display="block";
   playTalking("avatarTalking","avatarIdle");
   speak(line,"avatar",()=>{
     hideAvatarDialogue();
-    incompleteTasks.splice(currentTaskIndex,1);
-    if(incompleteTasks.length===0) allTasksDone();
-    else showTaskCard(currentTaskIndex>=incompleteTasks.length?0:currentTaskIndex);
+    // Manager always replies after task done
+    let bossReplyPool=getMoodTier()==="happy"
+      ?["Wonderful! Keep that energy up.","Beautiful work. On to the next one!","Lovely. You're doing brilliantly.","Perfect. The hotel thanks you.","That's what I love to see — let's keep going."]
+      :getMoodTier()==="neutral"
+      ?["Good. Move on to the next task.","Noted. Let's keep the pace.","That's done. Next one, please.","Understood. Carry on.","Good work. Don't slow down."]
+      :["It took a while, but it's done. Don't fall behind.","Completed. I'll be watching the next one closely.","Fine. Let's see you improve on the next task.","Done. Try to be more efficient next time.","About time. Keep moving."];
+    let bossReply=bossReplyPool[Math.floor(Math.random()*bossReplyPool.length)];
+    setBossDialogue("\u201c"+bossReply+"\u201d");
+    document.getElementById("bossDialogue").style.display="block";
+    playTalking("bossTalking","bossIdle");
+    speak(bossReply,"boss",()=>{
+      hideBossDialogue();
+      incompleteTasks.splice(currentTaskIndex,1);
+      if(incompleteTasks.length===0) allTasksDone();
+      else showTaskCard(currentTaskIndex>=incompleteTasks.length?0:currentTaskIndex);
+    });
   });
 }
 
 function doItLater(){
   showPanel(null);
+  stopTaskTimer();
   let task=incompleteTasks[currentTaskIndex];
   incompleteTasks.splice(currentTaskIndex,1);
   incompleteTasks.push(task);
@@ -2154,13 +2318,22 @@ function doItLater(){
   playTalking("avatarTalking","avatarIdle");
   speak(line,"avatar",()=>{
     hideAvatarDialogue();
-    if(currentTaskIndex>=incompleteTasks.length) currentTaskIndex=0;
-    showTaskCard(currentTaskIndex);
+    let bossPool=["Don't leave it too long — we have guests waiting.","That's fine, but circle back soon.","All right, but don't forget it.","Come back to that before the end of shift.","I'll be checking that's done before the day is out."];
+    let bossLine=bossPool[Math.floor(Math.random()*bossPool.length)];
+    setBossDialogue("\u201c"+bossLine+"\u201d");
+    document.getElementById("bossDialogue").style.display="block";
+    playTalking("bossTalking","bossIdle");
+    speak(bossLine,"boss",()=>{
+      hideBossDialogue();
+      if(currentTaskIndex>=incompleteTasks.length) currentTaskIndex=0;
+      showTaskCard(currentTaskIndex);
+    });
   });
 }
 
 function notToday(){
   showPanel(null);
+  stopTaskTimer();
   let task=incompleteTasks[currentTaskIndex];
   incompleteTasks.splice(currentTaskIndex,1);
   markNotToday(task.id);
@@ -2188,6 +2361,7 @@ function notToday(){
 
 function noMaterials(){
   showPanel(null);
+  stopTaskTimer();
   noMatsTask=incompleteTasks[currentTaskIndex];
   let missingForTask=noMatsTask.requiredItems.filter(ri=>
     missingItems.some(mi=>mi.name.toLowerCase()===ri.toLowerCase())
@@ -2284,7 +2458,7 @@ function buyCheckYes(){
   playTalking("avatarTalking","avatarIdle");
   speak(line,"avatar",()=>{
     hideAvatarDialogue();
-    let bossLine="Good. That's what I like to see.";
+    let bossLine=getPurchaseResponse();
     setBossDialogue("\u201c"+bossLine+"\u201d");
     document.getElementById("bossDialogue").style.display="block";
     playTalking("bossTalking","bossIdle");
