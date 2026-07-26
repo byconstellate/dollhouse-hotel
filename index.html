@@ -196,7 +196,7 @@ display:block;
 }
 /* multiply makes the white PNG background transparent on the dark lobby */
 #avatarIdle{ mix-blend-mode:multiply; }
-#avatarTalking{}
+#avatarTalking{ mix-blend-mode:multiply; }
 #bossIdle{ mix-blend-mode:screen; }
 .avatar-position{}
 #bossTalking{ display:none; transform-origin:bottom center; }
@@ -241,6 +241,31 @@ z-index:100;
 transition:opacity 1.4s ease;
 pointer-events:none;
 }
+
+/* ═══════════════════ INVENTORY BUTTON (top-right) ═══════════════════ */
+#invBtn{
+position:fixed;
+top:14px;
+right:16px;
+z-index:500;
+background:rgba(8,0,12,0.65);
+border:1px solid rgba(255,0,255,0.4);
+border-radius:8px;
+color:#ff88ff;
+font-family:"Courier New",monospace;
+font-size:11px;
+letter-spacing:1px;
+padding:0 12px;
+height:36px;
+display:none;
+align-items:center;
+justify-content:center;
+cursor:pointer;
+backdrop-filter:blur(4px);
+transition:background 0.2s, border-color 0.2s;
+white-space:nowrap;
+}
+#invBtn:hover{ background:rgba(255,0,255,0.15); border-color:#ff00ff; }
 
 /* ═══════════════════ FULLSCREEN BUTTON ═══════════════════ */
 #fsBtn{
@@ -296,7 +321,7 @@ gap:7px;
 }
 .trust-label{
 font-size:10px;
-color:#aaaaaa;
+color:#ffffff;
 letter-spacing:1px;
 }
 .trust-track{
@@ -639,6 +664,9 @@ border-radius:8px;
 <!-- Fullscreen toggle -->
 <button id="fsBtn" onclick="toggleFS()" title="Toggle fullscreen">⛶</button>
 
+<!-- Inventory shortcut (top-right, shown in-game) -->
+<button id="invBtn" onclick="openInventoryPanel()">📦 INVENTORY</button>
+
 <!-- HUD (trust + earnings) -->
 <div id="hud">
   <div class="hud-mood neutral" id="hudMood">😐 NEUTRAL</div>
@@ -775,7 +803,7 @@ border-radius:8px;
     <button onclick="markTaskDone()">✓ Mark as Done</button>
     <button class="btn-later" onclick="doItLater()">⏱ Do it Later</button>
     <button class="btn-skip" onclick="notToday()">✗ Not Today</button>
-    <button class="btn-nomats" id="noMatsBtn" onclick="noMaterials()" style="display:none">⚠ No supplies</button>
+    <button class="btn-nomats" id="noMatsBtn" onclick="noMaterials()">⚠ Missing Supplies</button>
   </div>
 </div>
 
@@ -1413,6 +1441,7 @@ function transitionToLobby(){
   setTimeout(()=>{
     showScene("videoScene","lobby");
     document.getElementById("hud").style.display="flex";
+    document.getElementById("invBtn").style.display="flex";
     updateHUD();
     flash.style.transition="opacity 2s ease";
     flash.style.opacity=0;
@@ -1490,10 +1519,40 @@ function returningFlow(){
   currentTaskIndex=0;
 
   hideBossDialogue();
-  // Go straight to tasks — no checklist panel for returning players
-  if(incompleteTasks.length===0 && shopQueue.length===0) allTasksDone();
-  else if(shopQueue.length>0) runShopTaskQueue();
-  else bossAssignFirst();
+
+  // Ask 1 random inventory question on every reload
+  function continueAfterReloadCheck(){
+    if(incompleteTasks.length===0 && shopQueue.length===0) allTasksDone();
+    else if(shopQueue.length>0) runShopTaskQueue();
+    else bossAssignFirst();
+  }
+  reloadInventoryCheck(continueAfterReloadCheck);
+}
+
+// Pick a random item and ask "Did you buy X yet?" at reload
+function reloadInventoryCheck(callback){
+  if(inventoryData.length===0){ callback(); return; }
+  // Prefer items from missing list, otherwise random
+  let pool=missingItems.length>0 ? missingItems : inventoryData;
+  let item=pool[Math.floor(Math.random()*pool.length)];
+  invAskedIds.add(item.id);
+  invAskCallback=callback;
+  // Store item so invCheckYes/No can reference it
+  invAskQueue.unshift(item);
+  invAskIndex=1;
+  let bossLines=[
+    `Before we dive in — did you manage to get ${item.name}?`,
+    `Quick check — have you bought ${item.name} yet?`,
+    `Just checking in: ${item.name} — do you have it?`,
+    `Did you pick up ${item.name} since last time?`
+  ];
+  let line=bossLines[Math.floor(Math.random()*bossLines.length)];
+  document.getElementById("invCheckItemName").textContent=item.name;
+  document.getElementById("invCheckBody").textContent=item.category+(item.required?" · Required":" · Optional");
+  setBossDialogue("\u201c"+line+"\u201d");
+  document.getElementById("bossDialogue").style.display="block";
+  playTalking("bossTalking","bossIdle");
+  speak(line,"boss",()=>{ hideBossDialogue(); showPanel("invCheckPanel"); });
 }
 
 
@@ -2044,7 +2103,7 @@ function _showTaskCardInner(index){
   let hasMissingMats=task.requiredItems&&task.requiredItems.some(ri=>
     missingItems.some(mi=>mi.name.toLowerCase()===ri.toLowerCase())
   );
-  noMatsBtn.style.display=hasMissingMats?"inline-block":"none";
+  noMatsBtn.style.display="inline-block";
 
   hideBossDialogue();
   hideAvatarDialogue();
