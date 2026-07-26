@@ -1,0 +1,103 @@
+const purchaseResponses = [
+
+"Excellent. That's exactly the kind of initiative I expect.",
+
+"Wonderful choice. I think that'll serve you well.",
+
+"Very nice. Every improvement makes a difference.",
+
+"I had a feeling you'd pick that one.",
+
+"Splendid decision. The hotel will thank you for it.",
+
+"A wise investment. I approve.",
+
+"Good thinking. You're beginning to understand what this hotel needs.",
+
+"I like your eye for detail.",
+
+"Lovely choice. That's going to look beautiful.",
+
+"Perfect. Quality always pays off.",
+
+"Well chosen.",
+
+"I couldn't have picked better myself.",
+
+"That should make today's tasks much easier.",
+
+"Excellent work. You're planning ahead.",
+
+"Smart decision.",
+
+"I appreciate someone who prepares properly.",
+
+"That's exactly what I'd recommend.",
+
+"Beautiful choice.",
+
+"Very professional.",
+
+"Your standards are improving.",
+
+"The hotel is becoming more elegant already.",
+
+"Our guests will notice the difference.",
+
+"I like your dedication.",
+
+"Another step towards a five-star hotel.",
+
+"Now that's initiative.",
+
+"I can see you're taking this seriously.",
+
+"That's money well spent.",
+
+"An excellent addition to your toolkit.",
+
+"You've got good instincts.",
+
+"Wonderful. Keep making choices like that.",
+
+"I've been hoping someone would purchase that.",
+
+"That'll certainly come in handy.",
+
+"The right tools make all the difference.",
+
+"I think you'll enjoy using that.",
+
+"Every upgrade brings us closer to perfection.",
+
+"Very impressive.",
+
+"You're becoming quite the professional housekeeper.",
+
+"Keep this up and we'll have the finest hotel in town.",
+
+"I admire your commitment.",
+
+"Excellent. I knew I could rely on your judgement.",
+
+"Nicely done.",
+
+"I have a good feeling about that purchase.",
+
+"Another thoughtful decision.",
+
+"The Dollhouse Hotel is in capable hands.",
+
+"Your guests will appreciate that.",
+
+"That's exactly the sort of improvement we like to see.",
+
+"I'm pleased with that choice.",
+
+"You're building something special here.",
+
+"Keep investing in quality. It always shows.",
+
+"Fantastic. Let's put it to good use."
+
+];
