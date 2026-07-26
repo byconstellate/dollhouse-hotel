@@ -1665,9 +1665,9 @@ function returningFlow(){
 
 // Pick a random item and ask "Did you buy X yet?" at reload
 function reloadInventoryCheck(callback){
-  if(inventoryData.length===0){ callback(); return; }
-  // Prefer items from missing list, otherwise random
-  let pool=missingItems.length>0 ? missingItems : inventoryData;
+  // Only ask if there are actually missing items — don't quiz about owned items
+  if(inventoryData.length===0 || missingItems.length===0){ callback(); return; }
+  let pool=missingItems;
   let item=pool[Math.floor(Math.random()*pool.length)];
   invAskedIds.add(item.id);
   invAskCallback=callback;
@@ -2425,6 +2425,14 @@ function buyNowNo(){
 //  BUY CHECK-IN (mid-shift "have you bought X yet?")
 // ═══════════════════════════════════════════════════
 function showBuyCheckPanel(){
+  // Skip any items the player already confirmed buying this session
+  while(buyCheckIndex < buyCheckQueue.length && !missingItems.some(m=>m.id===buyCheckQueue[buyCheckIndex].id)){
+    buyCheckIndex++;
+  }
+  if(buyCheckIndex >= buyCheckQueue.length){
+    if(afterBuyCheckCb){ let cb=afterBuyCheckCb; afterBuyCheckCb=null; cb(); }
+    return;
+  }
   let item=buyCheckQueue[buyCheckIndex];
   let bossCheckLines=[
     `By the way — have you managed to get ${item.name} yet?`,
