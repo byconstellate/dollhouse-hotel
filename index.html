@@ -194,9 +194,9 @@ object-fit:contain;
 object-position:bottom center;
 display:block;
 }
-/* Images are already transparent — no blend mode needed */
+/* avatar-talking.gif has a white background — multiply removes it on dark scenes */
+#avatarTalking{ mix-blend-mode:multiply; }
 #avatarIdle{}
-#avatarTalking{}
 #bossIdle{}
 .avatar-position{}
 #bossTalking{ display:none; transform-origin:bottom center; }
@@ -818,14 +818,18 @@ border-radius:8px;
   <div class="task-room-label" id="taskRoom"></div>
   <div class="task-name" id="taskName"></div>
   <div class="task-items" id="taskItems"></div>
-  <div id="taskTimer">00:00</div>
-  <div class="timer-bonus-hint" id="taskTimerHint">⚡ 1–5 min: Speedy Bonus &nbsp;|&nbsp; ⭐ 30+ min: Deep Clean Bonus</div>
-  <div class="panel-footer">
+  <div id="taskTimer" style="display:none">00:00</div>
+  <div class="timer-bonus-hint" id="taskTimerHint" style="display:none"></div>
+  <div class="panel-footer" id="startTaskFooter">
+    <button onclick="beginTask()">▶ Start Task</button>
+  </div>
+  <div class="panel-footer" id="taskActionFooter" style="display:none">
     <button onclick="markTaskDone()">✓ Mark as Done</button>
     <button class="btn-later" onclick="doItLater()">⏱ Do it Later</button>
     <button class="btn-skip" onclick="notToday()">✗ Not Today</button>
     <button class="btn-nomats" id="noMatsBtn" onclick="noMaterials()">⚠ Missing Supplies</button>
   </div>
+
 </div>
 
 <!-- ═══════ PANEL: SHOPPING TASK ═══════ -->
@@ -2243,8 +2247,11 @@ function _showTaskCardInner(index){
 
   hideBossDialogue();
   hideAvatarDialogue();
+  document.getElementById("taskTimer").style.display="none";
+  document.getElementById("taskTimerHint").style.display="none";
+  document.getElementById("startTaskFooter").style.display="flex";
+  document.getElementById("taskActionFooter").style.display="none";
   showPanel("taskCardPanel");
-  startTaskTimer();
 
   if(index>0){
     let line=getMoodDialogue(task);
@@ -2253,6 +2260,14 @@ function _showTaskCardInner(index){
     playTalking("bossTalking","bossIdle");
     speak(line,"boss",()=>{ hideBossDialogue(); });
   }
+}
+
+function beginTask(){
+  document.getElementById("startTaskFooter").style.display="none";
+  document.getElementById("taskActionFooter").style.display="flex";
+  document.getElementById("taskTimer").style.display="block";
+  document.getElementById("taskTimerHint").style.display="block";
+  startTaskTimer();
 }
 
 function markTaskDone(){
