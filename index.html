@@ -1186,12 +1186,9 @@ function startTaskTimer(){
     } else if(secs>=300){
       if(el) el.className="";
       if(hint) hint.textContent="⚡ 1–5 min: Speedy Bonus  |  ⭐ 30+ min: Deep Clean Bonus";
-    } else if(secs>=60){
-      if(el) el.className="timer-speedy";
-      if(hint) hint.textContent="⚡ SPEEDY BONUS ACTIVE — finish before 5 min!";
     } else {
-      if(el) el.className="timer-speedy";
-      if(hint) hint.textContent="⚡ SPEEDY BONUS ACTIVE — finish before 5 min!";
+      if(el) el.className="";
+      if(hint) hint.textContent="⚡ 1–5 min: Speedy Bonus  |  ⭐ 30+ min: Deep Clean Bonus";
     }
   }, 1000);
 }
